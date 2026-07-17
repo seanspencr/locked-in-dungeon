@@ -1,11 +1,10 @@
-<accessibility-service
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged"
-    android:accessibilityFlags="flagReportViewIds"
-    android:canRetrieveWindowContent="true"
-    android:accessibilityFeedbackType="feedbackVisual"
-    android:notificationTimeout="1000"
-     />
+    android:packageNames="com.android.systemui,     com.miui.home,     com.google.android.googlequicksearchbox,     com.android.chrome,     com.chrome.beta,     org.chromium.chrome.browser,     com.sec.android.app.sbrowser,     com.android.browser,     com.opera.browser,     com.opera.mini.native,     com.opera.touch,     com.huawei.browser,     com.UCMobile.intl,     com.uc.browser.en,     com.ucturbo,     com.ksmobile.cb,     mobi.mgeek.TunnyBrowser,     org.mozilla.firefox,     org.mozilla.firefox_beta,     com.microsoft.emmx,     com.brave.browser,     com.ecosia.android,     com.transsion.phoenix,     com.cloudmosa.puffinFree,     com.mx.browser,     com.opera.browser.beta,     com.opera.mini.native.beta,     com.mi.globalbrowser.mini,     mark.via.gp,     com.kiwibrowser.browser,     com.noxgroup.app.browser,     com.duckduckgo.mobile.android,     org.bromite.bromite,     com.nationaledtech.spinbrowser,     com.nhn.android.search,     com.vivaldi.browser,     net.upx.proxy.browser,     com.microsoft.bing,     com.google.android.apps.nexuslauncher,     com.motorola.launcher3,     com.mi.android.globallauncher,     com.android.vending,     com.google.android.youtube,     com.instagram.android,     com.snapchat.android,     com.sec.android.app.launcher,     com.whatsapp"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:notificationTimeout="100"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows|flagReportViewIds|flagRequestEnhancedWebAccessibility|flagRequestTouchExplorationMode|flagIncludeNotImportantViews|flagDefault"
+    android:canRetrieveWindowContent="true"/>
 
 
 <!--<accessibility-service-->
