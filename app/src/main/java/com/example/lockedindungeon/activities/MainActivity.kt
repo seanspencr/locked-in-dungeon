@@ -22,11 +22,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.lockedindungeon.screens.HomeScreen
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.utils.parseTextRecord
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.Charset
+
 
 
 class MainActivity : ComponentActivity() {
@@ -44,8 +46,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 //        redirectToSetting()
 
-        deployAssetToInternalStorage(this, "block-page.html")
-        setupNdefListener()
+//        deployAssetToInternalStorage(this, "block-page.html")
+//        setupNdefListener()
 
 //        val intent = Intent(this, BlockActivity::class.java)
 //        startActivity(intent)
@@ -53,10 +55,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             LockedInDungeonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    HomeScreen(Modifier.padding(innerPadding))
                 }
             }
         }
