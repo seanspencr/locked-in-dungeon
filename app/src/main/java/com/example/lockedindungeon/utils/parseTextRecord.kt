@@ -1,7 +1,47 @@
 package com.example.lockedindungeon.utils
 
+import android.content.Intent
+import android.nfc.NdefMessage
 import android.nfc.NdefRecord
+import android.nfc.NfcAdapter
+import java.nio.charset.Charset
 
+
+fun parseNdefIntent(intent: Intent): List<List<String>?>? {
+    if (intent.action != NfcAdapter.ACTION_NDEF_DISCOVERED) return null
+    val rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
+
+    if (rawMsgs != null) {
+        val contents = rawMsgs.map {
+            getStringContent(it as NdefMessage)
+        }.toList()
+        return contents
+    }
+
+    return  null
+
+}
+
+private fun getStringContent(message: NdefMessage): List<String> {
+    val parsedRecords = message.records.map { record ->
+        when (record.tnf) {
+            NdefRecord.TNF_WELL_KNOWN -> {
+                if (record.type.contentEquals(NdefRecord.RTD_TEXT)) {
+                    parseTextRecord(record)
+                } else {
+                    "Payload Type: RTD_${String(record.type)}"
+                }
+            }
+            NdefRecord.TNF_ABSOLUTE_URI -> {
+                String(record.payload, Charset.forName("UTF-8"))
+            }
+            else -> "Unsupported Record Type (TNF: ${record.tnf})"
+        }
+    }
+
+    return parsedRecords
+
+}
 fun parseTextRecord(record: NdefRecord): String {
     val payload = record.payload
     if (payload.isEmpty()) return ""

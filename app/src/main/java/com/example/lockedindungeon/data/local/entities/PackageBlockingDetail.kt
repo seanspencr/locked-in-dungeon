@@ -1,6 +1,5 @@
-package com.example.lockedindungeon.data.local.enitities
+package com.example.lockedindungeon.data.local.entities
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -15,5 +14,4 @@ data class PackageBlockingDetail(
     val startMinute: Int?,
     val endHour : Int?,
     val endMinute : Int?
-
 )

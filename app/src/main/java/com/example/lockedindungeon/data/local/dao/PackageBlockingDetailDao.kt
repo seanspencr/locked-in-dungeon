@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.lockedindungeon.data.local.enitities.PackageBlockingDetail
+import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
 
 @Dao
 interface PackageBlockingDetailDao {
@@ -19,6 +19,9 @@ interface PackageBlockingDetailDao {
 
     @Insert
     fun insertAll(vararg detail: PackageBlockingDetail)
+
+    @Insert
+    fun insertOne(detail: PackageBlockingDetail)
 
     @Delete
     fun delete(detail: PackageBlockingDetail)
