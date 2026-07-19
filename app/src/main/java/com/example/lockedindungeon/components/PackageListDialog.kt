@@ -35,7 +35,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun PackageListDialog(
     viewModel: PackageListViewModel = hiltViewModel(),
-    onDismiss : () -> Unit = {}
+    onDismiss : () -> Unit = {},
+    onAppSelected: (packageName: String, displayName: String) -> Unit
 ) {
     val appList = viewModel.state.value.appList
 
@@ -65,7 +66,12 @@ fun PackageListDialog(
                         key = { it.packageName } // stable key, see below
                     ) { app ->
 
-                        Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             val iconDrawable =
                                 LocalContext.current.packageManager.getApplicationIcon(app.packageName)
                             val iconBitmap = iconDrawable.toBitmap(60, 60)
@@ -76,8 +82,11 @@ fun PackageListDialog(
                                     .size(48.dp)
                                     .clip(RoundedCornerShape(8.dp))
                             )
-                            Text(text = app.displayName)
-                            Button({}) {
+                            Text(
+                                text = app.displayName,
+                                modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                            )
+                            Button(onClick = { onAppSelected(app.packageName, app.displayName) }) {
                                 Text(when(app.isBlocked){
                                     true -> "Manage"
                                     false -> "Block"

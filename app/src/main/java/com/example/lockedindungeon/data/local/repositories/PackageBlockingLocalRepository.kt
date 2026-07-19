@@ -19,11 +19,11 @@ class PackageBlockingLocalRepository @Inject constructor(
         return db.packageBlockingDetailDao().insertOne(detail)
     }
 
-    fun selectBlockingDetail(): List<PackageBlockingDetail> {
+    fun selectBlockingDetail(): List<PackageBlockingDetail>? {
         return db.packageBlockingDetailDao().getAll()
     }
 
-    fun findBlockingDetail(packageName : String) : PackageBlockingDetail {
+    fun findBlockingDetail(packageName : String) : PackageBlockingDetail? {
         return db.packageBlockingDetailDao().findByName(packageName)
     }
 

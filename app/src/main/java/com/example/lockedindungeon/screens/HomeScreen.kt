@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.lockedindungeon.components.BlockingDetailDialog
 import com.example.lockedindungeon.components.NfcDialog
 import com.example.lockedindungeon.components.PackageListDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
@@ -38,7 +39,18 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
         }
 
         if (viewModel.homeState.value.isPackageListDialogOpen) {
-            PackageListDialog(onDismiss = { viewModel.setPackageListOpenState(false) })
+            PackageListDialog(
+                onDismiss = { viewModel.setPackageListOpenState(false) },
+                onAppSelected = { pkg, name -> viewModel.openBlockingDetail(pkg, name) }
+            )
+        }
+
+        if (viewModel.homeState.value.isBlockingDetailDialogOpen) {
+            BlockingDetailDialog(
+                packageName = viewModel.homeState.value.selectedPackageName,
+                displayName = viewModel.homeState.value.selectedDisplayName,
+                onDismiss = { viewModel.closeBlockingDetail() }
+            )
         }
 
         if(viewModel.homeState.value.isNfcDialogOpen){

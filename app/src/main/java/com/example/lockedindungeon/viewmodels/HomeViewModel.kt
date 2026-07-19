@@ -14,7 +14,10 @@ data class HomeState (
     public val isBlockActive : Boolean = false,
     public val isPackageListDialogOpen : Boolean = false,
     public val isWritePasswordDialogOpen : Boolean = false,
-    public val isNfcDialogOpen : Boolean = false
+    public val isNfcDialogOpen : Boolean = false,
+    val isBlockingDetailDialogOpen: Boolean = false,
+    val selectedPackageName: String = "",
+    val selectedDisplayName: String = ""
 )
 
 @HiltViewModel
@@ -70,5 +73,20 @@ class HomeViewModel @Inject constructor(
             isWritePasswordDialogOpen = isOpen
         )
 
+    }
+
+    fun openBlockingDetail(packageName: String, displayName: String) {
+        _homeState.value = _homeState.value.copy(
+            isBlockingDetailDialogOpen = true,
+            selectedPackageName = packageName,
+            selectedDisplayName = displayName,
+            isPackageListDialogOpen = false
+        )
+    }
+
+    fun closeBlockingDetail() {
+        _homeState.value = _homeState.value.copy(
+            isBlockingDetailDialogOpen = false
+        )
     }
 }

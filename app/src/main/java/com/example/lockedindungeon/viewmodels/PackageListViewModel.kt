@@ -66,7 +66,7 @@ class PackageListViewModel @Inject  constructor(
                         }
                 }
 
-                repository.selectBlockingDetail().forEach {
+                repository.selectBlockingDetail()?.forEach {
                     result.find { app -> app.packageName == it.packageName }?.isBlocked = true
                 }
 
