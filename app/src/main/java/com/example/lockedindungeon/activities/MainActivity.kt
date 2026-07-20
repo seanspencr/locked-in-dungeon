@@ -1,5 +1,6 @@
 package com.example.lockedindungeon.activities
 
+import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
@@ -53,6 +54,9 @@ class MainActivity(
         enableEdgeToEdge()
         if(!isAccessibilityEnabled()){
             redirectToSetting()
+        }
+        if(!hasUsageStatsPermission()){
+            requestUsageStatsPermission()
         }
 
         setContent {
@@ -114,12 +118,31 @@ class MainActivity(
         return false
     }
 
+    fun hasUsageStatsPermission(): Boolean {
+        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = appOps.unsafeCheckOpNoThrow(
+            AppOpsManager.OPSTR_GET_USAGE_STATS,
+            android.os.Process.myUid(),
+            packageName
+        )
+        return mode == AppOpsManager.MODE_ALLOWED
+    }
+
     fun redirectToSetting(){
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
             // Flags ensure the settings page handles navigation correctly
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
+    }
+
+    fun requestUsageStatsPermission() {
+        if (!hasUsageStatsPermission()) {
+            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            startActivity(intent)
+        }
     }
 
 

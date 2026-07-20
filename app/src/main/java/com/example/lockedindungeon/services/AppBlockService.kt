@@ -6,9 +6,9 @@ import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.example.lockedindungeon.activities.BlockActivity
-import com.example.lockedindungeon.data.local.AppDatabase
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
+import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import dagger.hilt.EntryPoints
 import dagger.hilt.components.SingletonComponent
@@ -18,18 +18,19 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
-import javax.inject.Inject
 
 
 class AppBlockService: AccessibilityService() {
 
-    lateinit var repo: PackageBlockingLocalRepository
+    lateinit var blockingRepo: PackageBlockingLocalRepository
+    lateinit var usageRepo: AppUsageRepository
 
 //    IDK WHAT IS THIS tapi katanya karena accessibility service ga ngikut lifecycle yg bisa diurus sm hilt jadi gabisa
     @dagger.hilt.EntryPoint
     @dagger.hilt.InstallIn(SingletonComponent::class)
     interface AppBlockServiceEntryPoint {
-        fun getRepo(): PackageBlockingLocalRepository
+        fun getBlockingRepo(): PackageBlockingLocalRepository
+        fun getUsageRepo(): AppUsageRepository
     }
 
     override fun onCreate() {
@@ -37,7 +38,8 @@ class AppBlockService: AccessibilityService() {
             applicationContext,
             AppBlockServiceEntryPoint::class.java
         )
-        repo = entryPoint.getRepo()
+        blockingRepo = entryPoint.getBlockingRepo()
+        usageRepo = entryPoint.getUsageRepo()
         super.onCreate()
     }
 
@@ -48,7 +50,7 @@ class AppBlockService: AccessibilityService() {
 
 
     suspend fun registerBlockedPackages(){
-        repo.selectBlockingDetails()?.collectLatest { blocks ->
+        blockingRepo.selectBlockingDetails()?.collectLatest { blocks ->
             // 1. Clear the old cache states completely
             blockingDetailCache.clear()
 
@@ -99,7 +101,11 @@ class AppBlockService: AccessibilityService() {
     }
 
     fun isTimerExceeded(packageBlockingDetail: PackageBlockingDetail) : Boolean{
-        return false
+        val usage = usageRepo.getUsageDurationMinutes(packageBlockingDetail.packageName)
+        val shouldBlock = usage >= (packageBlockingDetail.timerDurationMinute ?: 0)
+
+        Log.d(tag, "Usage : ${usage}, timer : ${packageBlockingDetail.timerDurationMinute}, shouldBlock : ${shouldBlock}")
+        return shouldBlock
     }
 
     fun isInsideBlockedTimeframe(packageBlockingDetail: PackageBlockingDetail) : Boolean{
