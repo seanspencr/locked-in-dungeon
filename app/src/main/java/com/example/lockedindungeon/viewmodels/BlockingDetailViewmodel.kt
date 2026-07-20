@@ -76,7 +76,7 @@ class BlockingDetailViewmodel @Inject constructor(
                 endHour = if (_state.value.blockingType != "Timer") _state.value.endHour else null,
                 endMinute = if (_state.value.blockingType != "Timer") _state.value.endMinute else null
             )
-            repository.insertBlockingDetail(detail)
+            repository.upsertBlockingDetail(detail)
             _state.value = _state.value.copy(isSaving = false)
             onComplete()
         }
