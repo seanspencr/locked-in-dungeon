@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.lockedindungeon.data.local.AppDatabase
 import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 
@@ -23,11 +24,11 @@ class PackageBlockingLocalRepository @Inject constructor(
         return db.packageBlockingDetailDao().upsertOne(detail)
     }
 
-    fun selectBlockingDetail(): List<PackageBlockingDetail>? {
+    fun selectBlockingDetail(): Flow<List<PackageBlockingDetail>?>? {
         return db.packageBlockingDetailDao().getAll()
     }
 
-    fun findBlockingDetail(packageName : String) : PackageBlockingDetail? {
+    fun findBlockingDetail(packageName : String) : Flow<PackageBlockingDetail?>? {
         return db.packageBlockingDetailDao().findByName(packageName)
     }
 

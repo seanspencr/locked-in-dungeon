@@ -30,16 +30,19 @@ class BlockingDetailViewmodel @Inject constructor(
 
     fun setApp(packageName: String, displayName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val existing = repository.findBlockingDetail(packageName)
-            _state.value = _state.value.copy(
-                packageName = packageName,
-                displayName = displayName,
-                blockingType = existing?.blockingType ?: "Blacklist",
-                hour = if (existing?.blockingType == "Timer") (existing.timerDurationMinute ?: 0) / 60 else (existing?.startHour ?: 0),
-                minute = if (existing?.blockingType == "Timer") (existing.timerDurationMinute ?: 0) % 60 else (existing?.startMinute ?: 0),
-                endHour = existing?.endHour ?: 0,
-                endMinute = existing?.endMinute ?: 0
-            )
+            repository.findBlockingDetail(packageName)?.collect {
+                existing ->
+                _state.value = _state.value.copy(
+                    packageName = packageName,
+                    displayName = displayName,
+                    blockingType = existing?.blockingType ?: "Blacklist",
+                    hour = if (existing?.blockingType == "Timer") (existing.timerDurationMinute ?: 0) / 60 else (existing?.startHour ?: 0),
+                    minute = if (existing?.blockingType == "Timer") (existing.timerDurationMinute ?: 0) % 60 else (existing?.startMinute ?: 0),
+                    endHour = existing?.endHour ?: 0,
+                    endMinute = existing?.endMinute ?: 0
+                )
+            }
+
         }
     }
 

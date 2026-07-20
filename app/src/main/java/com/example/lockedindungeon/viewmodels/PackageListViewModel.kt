@@ -14,6 +14,7 @@ import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -44,12 +45,14 @@ class PackageListViewModel @Inject  constructor(
 //            pake Dispatcher.Default = background thread yg cpu heavy, buat parsing gtgt
 //            Dispatchers.Main = UI thread
 //            Dispatcher.IO lebih gede dari default, biasa buat network call
+
             val allApps = withContext(Dispatchers.Default) {
                 _state.value = _state.value.copy(
                     isLoading = true
                 )
 
-                val launcherApps = appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
+                val launcherApps =
+                    appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
                 val packageManager = appContext.packageManager
                 val currentPackage = appContext.packageName
                 val result = mutableListOf<PackageInformationDto>()
@@ -59,23 +62,30 @@ class PackageListViewModel @Inject  constructor(
                         .map { it.applicationInfo }
                         .filter { it.packageName != currentPackage }
                         .forEach { appInfo ->
-                            val profileType = if (profile == Process.myUserHandle()) "" else "(Work)"
+                            val profileType =
+                                if (profile == Process.myUserHandle()) "" else "(Work)"
                             val appLabel = appInfo.loadLabel(packageManager).toString()
                             val displayName = "$appLabel $profileType"
                             result.add(PackageInformationDto(appInfo.packageName, displayName))
                         }
                 }
-
-                repository.selectBlockingDetail()?.forEach {
-                    result.find { app -> app.packageName == it.packageName }?.isBlocked = true
-                }
-
                 result
             }
 
-            _state.value = _state.value.copy(appList = allApps, isLoading = false)
+            repository.selectBlockingDetail()?.collect { details ->
+                details?.forEach {
+                    allApps.find { app ->
+                        app.packageName == it.packageName
+                    }?.isBlocked = true
+
+
+                    _state.value = _state.value.copy(appList = allApps, isLoading = false)
+                }
+
+                _state.value = _state.value.copy(appList = allApps, isLoading = false)
+            }
+
+
         }
     }
-
-
 }

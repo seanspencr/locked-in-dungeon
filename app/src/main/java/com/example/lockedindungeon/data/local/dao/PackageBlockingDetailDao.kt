@@ -6,17 +6,18 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
 import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PackageBlockingDetailDao {
     @Query("SELECT * FROM blocking_detail")
-    fun getAll(): List<PackageBlockingDetail>?
+    fun getAll(): Flow<List<PackageBlockingDetail>?>?
 
     @Query("SELECT * FROM blocking_detail WHERE packageName IN (:packageNames)")
-    fun loadAllByIds(packageNames: Array<String>): List<PackageBlockingDetail>?
+    fun loadAllByIds(packageNames: Array<String>): Flow<List<PackageBlockingDetail>?>?
 
     @Query("SELECT * FROM blocking_detail WHERE packageName LIKE :packageName LIMIT 1")
-    fun findByName(packageName: String): PackageBlockingDetail?
+    fun findByName(packageName: String): Flow<PackageBlockingDetail?>?
 
     @Insert
     fun insertAll(vararg detail: PackageBlockingDetail)
