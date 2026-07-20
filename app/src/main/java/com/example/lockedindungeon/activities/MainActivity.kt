@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.lockedindungeon.activities.wrapper.NfcWrapper
 import com.example.lockedindungeon.screens.HomeScreen
+import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.utils.parseNdefIntent
 import com.example.lockedindungeon.viewmodels.HomeViewModel
@@ -48,7 +49,11 @@ class MainActivity(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        deployAssetToInternalStorage(this, "block-page.html")
         enableEdgeToEdge()
+        if(!isAccessibilityEnabled()){
+            redirectToSetting()
+        }
 
         setContent {
             LockedInDungeonTheme {
@@ -84,6 +89,30 @@ class MainActivity(
 
 
 
+
+    fun isAccessibilityEnabled() : Boolean {
+        val serviceName = packageName + "/" + AppBlockService::class.java.canonicalName
+        val accessibilityEnabled = try {
+            Settings.Secure.getInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
+        } catch (e: Settings.SettingNotFoundException) {
+            Log.e("MainActivity", "Error finding setting, default accessibility to not found: $e")
+            0
+        }
+
+        if (accessibilityEnabled == 1) {
+            val settingValue = Settings.Secure.getString(
+                contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            ) ?: return false
+
+            Log.d(tag, "Setting value: $settingValue")
+            Log.d(tag, "Looking for service: $serviceName")
+
+            return settingValue.split(":").contains(serviceName)
+        }
+
+        return false
+    }
 
     fun redirectToSetting(){
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {

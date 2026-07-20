@@ -8,7 +8,7 @@ data class PackageBlockingDetail(
 
     @PrimaryKey val packageName : String,
     val displayName : String = "",
-    val blockingType : String = "",
+    val blockingType : BlockingType = BlockingType.TIMER,
     val timerDurationMinute : Int?,
     val startHour : Int?,
     val startMinute: Int?,

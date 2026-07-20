@@ -17,6 +17,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.viewmodels.BlockingDetailViewmodel
 
 @Composable
@@ -61,18 +62,18 @@ fun BlockingDetailDialog(
 
                 Text("Blocking Mode")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    listOf("Blacklist", "Whitelist", "Timer").forEach { type ->
+                    BlockingType.entries.forEach { type ->
                         FilterChip(
                             selected = state.blockingType == type,
                             onClick = { viewModel.onBlockingTypeChange(type) },
-                            label = { Text(type) }
+                            label = { Text(type.name) }
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(if (state.blockingType == "Timer") "Duration" else "Start Time")
+                Text(if (state.blockingType == BlockingType.TIMER) "Duration" else "Start Time")
                 
                 Text("${state.hour} hours")
                 Slider(
@@ -90,7 +91,7 @@ fun BlockingDetailDialog(
                     steps = 59
                 )
 
-                if (state.blockingType != "Timer") {
+                if (state.blockingType != BlockingType.TIMER) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text("End Time")
 

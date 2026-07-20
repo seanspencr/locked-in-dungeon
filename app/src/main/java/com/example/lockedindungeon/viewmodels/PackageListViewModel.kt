@@ -1,11 +1,9 @@
 package com.example.lockedindungeon.viewmodels
 
-import android.app.Application
 import android.content.Context
 import android.content.pm.LauncherApps
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
 import com.example.lockedindungeon.data.model.PackageInformationDto
 import android.os.Process
 import androidx.lifecycle.ViewModel
@@ -14,7 +12,6 @@ import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -72,7 +69,7 @@ class PackageListViewModel @Inject  constructor(
                 result
             }
 
-            repository.selectBlockingDetail()?.collect { details ->
+            repository.selectBlockingDetails()?.collect { details ->
                 details?.forEach {
                     allApps.find { app ->
                         app.packageName == it.packageName
