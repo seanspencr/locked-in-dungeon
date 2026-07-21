@@ -8,6 +8,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.example.lockedindungeon.activities.BlockActivity
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
+import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import dagger.hilt.EntryPoints
@@ -15,6 +16,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
@@ -24,6 +26,7 @@ class AppBlockService: AccessibilityService() {
 
     lateinit var blockingRepo: PackageBlockingLocalRepository
     lateinit var usageRepo: AppUsageRepository
+    lateinit var stateRepository: AppStateRepository
 
 //    IDK WHAT IS THIS tapi katanya karena accessibility service ga ngikut lifecycle yg bisa diurus sm hilt jadi gabisa
     @dagger.hilt.EntryPoint
@@ -31,6 +34,7 @@ class AppBlockService: AccessibilityService() {
     interface AppBlockServiceEntryPoint {
         fun getBlockingRepo(): PackageBlockingLocalRepository
         fun getUsageRepo(): AppUsageRepository
+        fun getStateRepository(): AppStateRepository
     }
 
     override fun onCreate() {
@@ -40,6 +44,7 @@ class AppBlockService: AccessibilityService() {
         )
         blockingRepo = entryPoint.getBlockingRepo()
         usageRepo = entryPoint.getUsageRepo()
+        stateRepository = entryPoint.getStateRepository()
         super.onCreate()
     }
 
@@ -65,38 +70,44 @@ class AppBlockService: AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
 
         Log.d(tag, "Event detected");
-        event?.let {
-            ev ->
-           if(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED != ev.eventType) return
+        CoroutineScope(Dispatchers.IO).launch {
+            stateRepository.isActive.collect {
+                isActive ->
+                if(!isActive) return@collect
 
-           Log.d(tag, "window state changed ${ev.packageName}")
+                event?.let {
+                        ev ->
+                    if(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED != ev.eventType) return@collect
 
-            val detail : PackageBlockingDetail? = blockingDetailCache.find { it.packageName ==  ev.packageName}
-            if(detail == null) {
-                Log.d(tag, "Package from ${ev.packageName} dteected, but not blocked")
-                return
-            }
+                    Log.d(tag, "window state changed ${ev.packageName}")
+
+                    val detail : PackageBlockingDetail? = blockingDetailCache.find { it.packageName ==  ev.packageName}
+                    if(detail == null) {
+                        Log.d(tag, "Package from ${ev.packageName} dteected, but not blocked")
+                        return@collect
+                    }
 
 
-            val shouldBlock : Boolean = when(detail.blockingType){
-                BlockingType.TIMER -> isTimerExceeded(detail)
-                BlockingType.BLACKLIST -> isInsideBlockedTimeframe(detail)
-                BlockingType.WHITELIST -> isInsideBlockedTimeframe(detail)
-                else -> {
-                    Log.e(tag, "Unknown blocking type")
-                    false
-                }
-            }
+                    val shouldBlock : Boolean = when(detail.blockingType){
+                        BlockingType.TIMER -> isTimerExceeded(detail)
+                        BlockingType.BLACKLIST -> isInsideBlockedTimeframe(detail)
+                        BlockingType.WHITELIST -> isInsideBlockedTimeframe(detail)
+                        else -> {
+                            Log.e(tag, "Unknown blocking type")
+                            false
+                        }
+                    }
 
-            if(shouldBlock){
+                    if(shouldBlock){
 //                start activtity and show webview
-                val intent = Intent(this, BlockActivity::class.java).apply{
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        val intent = Intent(applicationContext, BlockActivity::class.java).apply{
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        intent.putExtra("BLOCKED_PACKAGE", ev.packageName)
+                        startActivity(intent)
+                    }
                 }
-                intent.putExtra("BLOCKED_PACKAGE", ev.packageName)
-                startActivity(intent)
             }
-
         }
     }
 
