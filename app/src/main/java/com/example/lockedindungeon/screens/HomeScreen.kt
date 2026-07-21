@@ -14,10 +14,15 @@ import com.example.lockedindungeon.components.WriteTagPasswordDialog
 import com.example.lockedindungeon.viewmodels.HomeViewModel
 
 @Composable
-fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltViewModel(), enableNfc : ()-> Unit = {}, disableNfc : ()-> Unit = {}) {
+fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltViewModel()) {
 
     Column() {
-        Text(text = viewModel.homeState.value.message, modifier = modifier)
+        Text(text = viewModel.state.value.message, modifier = modifier)
+
+        Text(text = when(viewModel.state.value.isBlockActive){
+            true -> "Tap card to disable"
+            false -> "Tap card to enable"
+        }, modifier = modifier)
 
         Button(onClick = {
             viewModel.changeMessage("I am changed")
@@ -28,37 +33,42 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
             Text(text = "Open package list dialog")
         }
 
-        Button(onClick = { viewModel.setNfcDialogOpenState(true); enableNfc() }) {
-            Text(text = when{
-                viewModel.homeState.value.isBlockActive -> "Turn off blocking"
-                else -> "Turn on blocking"
-            })
-        }
-        Button(onClick = { viewModel.setWritePasswordDialogOpenState(true); enableNfc() }) {
+//        Button(onClick = { viewModel.setNfcDialogOpenState(true); enableNfc() }) {
+//            Text(text = when{
+//                viewModel.state.value.isBlockActive -> "Turn off blocking"
+//                else -> "Turn on blocking"
+//            })
+//        }
+
+        Button(onClick = { viewModel.setWritePasswordDialogOpenState(true)}) {
             Text(text = "Register new card")
         }
 
-        if (viewModel.homeState.value.isPackageListDialogOpen) {
+        if (viewModel.state.value.isPackageListDialogOpen) {
             PackageListDialog(
                 onDismiss = { viewModel.setPackageListOpenState(false) },
                 onAppSelected = { pkg, name -> viewModel.openBlockingDetail(pkg, name) }
             )
         }
 
-        if (viewModel.homeState.value.isBlockingDetailDialogOpen) {
+        if (viewModel.state.value.isBlockingDetailDialogOpen) {
             BlockingDetailDialog(
-                packageName = viewModel.homeState.value.selectedPackageName,
-                displayName = viewModel.homeState.value.selectedDisplayName,
+                packageName = viewModel.state.value.selectedPackageName,
+                displayName = viewModel.state.value.selectedDisplayName,
                 onDismiss = { viewModel.closeBlockingDetail() }
             )
         }
 
-        if(viewModel.homeState.value.isNfcDialogOpen){
-            NfcDialog(onDismiss = { viewModel.setNfcDialogOpenState(false); disableNfc() })
+        if(viewModel.state.value.isNfcDialogOpen){
+            NfcDialog(
+                hashedPassword = viewModel.state.value.nfcHashedPassword,
+                onDismiss = { viewModel.setNfcDialogOpenState(false)},
+                onPasswordMatch = { viewModel.setNfcDialogOpenState(false)}
+            )
         }
 
-        if(viewModel.homeState.value.isWritePasswordDialogOpen) {
-            WriteTagPasswordDialog(onDismiss = { viewModel.setWritePasswordDialogOpenState(false); disableNfc() })
+        if(viewModel.state.value.isWritePasswordDialogOpen) {
+            WriteTagPasswordDialog(onDismiss = { viewModel.setWritePasswordDialogOpenState(false)})
         }
     }
 

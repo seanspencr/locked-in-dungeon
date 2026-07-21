@@ -63,9 +63,7 @@ class MainActivity(
             LockedInDungeonTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     HomeScreen(
-                        Modifier.padding(innerPadding),
-                        enableNfc = { nfcWrapper.enable() },
-                        disableNfc = {nfcWrapper.disable()}
+                        Modifier.padding(innerPadding)
                     )
                 }
             }
@@ -74,20 +72,25 @@ class MainActivity(
 
     override fun onResume() {
         super.onResume()
+        nfcWrapper.enable()
     }
 
     override fun onPause() {
         super.onPause()
+        nfcWrapper.disable()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
         if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
-            if(homeViewModel.homeState.value.isNfcDialogOpen){
-                nfcScanViewModel.onTagDetected(intent)
-            }else if(homeViewModel.homeState.value.isWritePasswordDialogOpen){
-                writeTagPasswordViewModel.onTagDetected(intent)
-            }
+            homeViewModel.onNdefIntent(intent)
+
+//            if(homeViewModel.homeState.value.isNfcDialogOpen){
+//                nfcScanViewModel.onTagDetected(intent)
+//            }else if(homeViewModel.homeState.value.isWritePasswordDialogOpen){
+//                writeTagPasswordViewModel.onTagDetected(intent)
+//            }
         }
     }
 

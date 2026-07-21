@@ -11,18 +11,24 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.lockedindungeon.viewmodels.NfcScanDialogState
 import com.example.lockedindungeon.viewmodels.NfcScanViewmodel
 
 @Composable
 fun NfcDialog(
+    hashedPassword: String,
     viewModel: NfcScanViewmodel = hiltViewModel(),
-    onDismiss : () -> Unit = {}
+    onDismiss : () -> Unit = {},
+    onPasswordMatch: () -> Unit = {}
 ) {
+    LaunchedEffect(hashedPassword) {
+        viewModel.setCardPassword(hashedPassword)
+    }
+
     Dialog(onDismissRequest = {
         onDismiss()
         viewModel.reset()
@@ -34,31 +40,20 @@ fun NfcDialog(
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
         ){
-            when(viewModel.state.value.dialogState){
-                NfcScanDialogState.READ_CARD -> {
-                    if(viewModel.state.value.isDetected){
-                        Column() {
-                            Text("Nfc detected")
-                            Text("Message: ${viewModel.state.value.message}")
-                        }
-                    }else{
-                        Box(){
-                            Text("Please tap your nfc card")
-                        }
-                    }
+            Column() {
+                Text("Please enter your password")
+                viewModel.state.value.message?.let {
+                    Text("Message: $it")
                 }
-                NfcScanDialogState.CHECK_PASSWORD -> {
-                    Column() {
-                        Text("Please enter your password")
-                        Text("Message: ${viewModel.state.value.message}")
-                        TextField(value = viewModel.state.value.passwordBuffer, onValueChange = { viewModel.onWriteBufferChanged(it) }, label = {Text("Password")    })
-                        Button({ viewModel.onPasswordSubmit() }) {
-                            Text("Submit")
-                        }
-                    }
+                TextField(
+                    value = viewModel.state.value.passwordBuffer,
+                    onValueChange = { viewModel.onWriteBufferChanged(it) },
+                    label = { Text("Password") }
+                )
+                Button({ viewModel.onPasswordSubmit(onPasswordMatch) }) {
+                    Text("Submit")
                 }
             }
-
         }
     }
 }
