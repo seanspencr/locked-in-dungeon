@@ -1,16 +1,11 @@
-package com.example.lockedindungeon.activities.wrapper
+package com.example.lockedindungeon.feature
 
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
-import android.nfc.NdefMessage
-import android.nfc.NdefRecord
 import android.nfc.NfcAdapter
-import android.util.Log
-import com.example.lockedindungeon.utils.parseTextRecord
 import dagger.hilt.android.scopes.ActivityScoped
-import java.nio.charset.Charset
 import javax.inject.Inject
 
 

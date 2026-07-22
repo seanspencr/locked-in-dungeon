@@ -4,7 +4,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.entities.BlockingType
-import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
+import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -70,8 +70,8 @@ class BlockingDetailViewmodel @Inject constructor(
     fun submit(onComplete: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             _state.value = _state.value.copy(isSaving = true)
-            val detail = PackageBlockingDetail(
-                packageName = _state.value.packageName,
+            val detail = AppBlockingDetail(
+                packageNameOrUrl = _state.value.packageName,
                 displayName = _state.value.displayName,
                 blockingType = _state.value.blockingType,
                 timerDurationMinute = if (_state.value.blockingType == BlockingType.TIMER) _state.value.hour * 60 + _state.value.minute else null,

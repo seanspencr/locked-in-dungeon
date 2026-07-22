@@ -5,18 +5,21 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 import com.example.lockedindungeon.activities.BlockActivity
 import com.example.lockedindungeon.data.local.entities.BlockingType
-import com.example.lockedindungeon.data.local.entities.PackageBlockingDetail
+import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
+import com.example.lockedindungeon.feature.UrlDetector
+import com.example.lockedindungeon.utils.isBrowser
 import dagger.hilt.EntryPoints
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
@@ -27,6 +30,7 @@ class AppBlockService: AccessibilityService() {
     lateinit var blockingRepo: PackageBlockingLocalRepository
     lateinit var usageRepo: AppUsageRepository
     lateinit var stateRepository: AppStateRepository
+    lateinit var urlDetector: UrlDetector
 
 //    IDK WHAT IS THIS tapi katanya karena accessibility service ga ngikut lifecycle yg bisa diurus sm hilt jadi gabisa
     @dagger.hilt.EntryPoint
@@ -45,10 +49,11 @@ class AppBlockService: AccessibilityService() {
         blockingRepo = entryPoint.getBlockingRepo()
         usageRepo = entryPoint.getUsageRepo()
         stateRepository = entryPoint.getStateRepository()
+        urlDetector = UrlDetector()
         super.onCreate()
     }
 
-    private val blockingDetailCache : MutableList<PackageBlockingDetail> = mutableListOf()
+    private val blockingDetailCache : MutableList<AppBlockingDetail> = mutableListOf()
     companion object {
         val tag : String = "AppBlockService"
     }
@@ -61,7 +66,7 @@ class AppBlockService: AccessibilityService() {
 
             // 2. Repopulate with the fresh database snapshot
             blocks?.forEach { detail ->
-                addMonitoredPackage(detail.packageName)
+                addMonitoredPackage(detail.packageNameOrUrl)
                 blockingDetailCache.add(detail)
             }
         }
@@ -69,7 +74,7 @@ class AppBlockService: AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
 
-        Log.d(tag, "Event detected");
+//        Log.d(tag, "Event detected");
         CoroutineScope(Dispatchers.IO).launch {
             stateRepository.isActive.collect {
                 isActive ->
@@ -77,53 +82,85 @@ class AppBlockService: AccessibilityService() {
 
                 event?.let {
                         ev ->
-                    if(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED != ev.eventType) return@collect
+                    //  --------  handle blocking by package name
+                    if(!intArrayOf(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, AccessibilityEvent.TYPE_WINDOWS_CHANGED, AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED).contains(ev.eventType)) return@collect
 
-                    Log.d(tag, "window state changed ${ev.packageName}")
+//                    Log.d(tag, "window state changed ${ev.packageName}")
 
-                    val detail : PackageBlockingDetail? = blockingDetailCache.find { it.packageName ==  ev.packageName}
-                    if(detail == null) {
-                        Log.d(tag, "Package from ${ev.packageName} dteected, but not blocked")
+                    val detail : AppBlockingDetail? = blockingDetailCache.find { it.packageNameOrUrl ==  ev.packageName}
+                    if(detail == null && !isBrowser(ev.packageName.toString())) {
+//                        Log.d(tag, "Package from ${ev.packageName} dteected, but not blocked")
                         return@collect
                     }
 
+                    val shouldBlockPackage : Boolean = isEventShouldBeBlocked(detail)
 
-                    val shouldBlock : Boolean = when(detail.blockingType){
-                        BlockingType.TIMER -> isTimerExceeded(detail)
-                        BlockingType.BLACKLIST -> isInsideBlockedTimeframe(detail)
-                        BlockingType.WHITELIST -> isInsideBlockedTimeframe(detail)
-                        else -> {
-                            Log.e(tag, "Unknown blocking type")
-                            false
-                        }
+                    //  --------  handle blocking by url name
+                    var shouldBlockUrl : Boolean = false
+                    Log.d(tag, "packageName : ${ev.packageName.toString()}")
+                    if(isBrowser(ev.packageName.toString())){
+                        Log.d(tag, "browser detected")
+                        shouldBlockUrl = isUrlShouldBlocked(ev.source, ev.packageName.toString())
                     }
 
-                    if(shouldBlock){
+                    if(shouldBlockPackage || shouldBlockUrl){
 //                start activtity and show webview
                         val intent = Intent(applicationContext, BlockActivity::class.java).apply{
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         }
                         intent.putExtra("BLOCKED_PACKAGE", ev.packageName)
                         startActivity(intent)
+                        return@collect
                     }
+
+
+
                 }
             }
         }
     }
 
-    fun isTimerExceeded(packageBlockingDetail: PackageBlockingDetail) : Boolean{
-        val usage = usageRepo.getUsageDurationMinutes(packageBlockingDetail.packageName)
-        val shouldBlock = usage >= (packageBlockingDetail.timerDurationMinute ?: 0)
+    private fun isUrlShouldBlocked(nodeInfo : AccessibilityNodeInfo?, packageName : String): Boolean {
+        if(nodeInfo == null) return false
 
-        Log.d(tag, "Usage : ${usage}, timer : ${packageBlockingDetail.timerDurationMinute}, shouldBlock : ${shouldBlock}")
+
+        val url : String = urlDetector.getUrl(nodeInfo, packageName)
+
+        val detail = blockingDetailCache.find { it.packageNameOrUrl == url && it.targetType == TargetType.URL }
+        if (detail != null) {
+            return isEventShouldBeBlocked(detail)
+        }
+
+        return false
+    }
+
+
+    private fun isEventShouldBeBlocked(detail: AppBlockingDetail?): Boolean {
+        if(detail == null) return false
+        return when (detail.blockingType) {
+            BlockingType.TIMER -> isTimerExceeded(detail)
+            BlockingType.BLACKLIST -> isInsideBlockedTimeframe(detail)
+            BlockingType.WHITELIST -> isInsideBlockedTimeframe(detail)
+            else -> {
+                Log.e(tag, "Unknown blocking type")
+                false
+            }
+    }
+    }
+
+    fun isTimerExceeded(appBlockingDetail: AppBlockingDetail) : Boolean{
+        val usage = usageRepo.getUsageDurationMinutes(appBlockingDetail.packageNameOrUrl)
+        val shouldBlock = usage >= (appBlockingDetail.timerDurationMinute ?: 0)
+
+        Log.d(tag, "Usage : ${usage}, timer : ${appBlockingDetail.timerDurationMinute}, shouldBlock : ${shouldBlock}")
         return shouldBlock
     }
 
-    fun isInsideBlockedTimeframe(packageBlockingDetail: PackageBlockingDetail) : Boolean{
-        val startHour = packageBlockingDetail.startHour ?: return false
-        val startMin = packageBlockingDetail.startMinute ?: return false
-        val endHour = packageBlockingDetail.endHour ?: return false
-        val endMin = packageBlockingDetail.endMinute ?: return false
+    fun isInsideBlockedTimeframe(appBlockingDetail: AppBlockingDetail) : Boolean{
+        val startHour = appBlockingDetail.startHour ?: return false
+        val startMin = appBlockingDetail.startMinute ?: return false
+        val endHour = appBlockingDetail.endHour ?: return false
+        val endMin = appBlockingDetail.endMinute ?: return false
 
         val now = LocalTime.now()
         val startTime = LocalTime.of(startHour, startMin)
@@ -132,7 +169,7 @@ class AppBlockService: AccessibilityService() {
         val isInside = now.isAfter(startTime) && now.isBefore(endTime)
 
         Log.d(tag, "startTime : ${startTime}, endTime : ${endTime}, now : ${now}, isInside : ${isInside}")
-        return when (packageBlockingDetail.blockingType) {
+        return when (appBlockingDetail.blockingType) {
             BlockingType.BLACKLIST -> isInside  // Block if CURRENTLY within bounds
             BlockingType.WHITELIST -> !isInside // Block if CURRENTLY outside bounds
             else -> false

@@ -24,7 +24,9 @@ object AppDatabaseModule {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "locked_in_dungeon"
-            ).build()
+            )
+            .fallbackToDestructiveMigration(true)
+            .build()
         }
     }
 }

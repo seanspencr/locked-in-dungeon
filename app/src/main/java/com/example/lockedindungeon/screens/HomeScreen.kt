@@ -24,11 +24,6 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
             false -> "Tap card to enable"
         }, modifier = modifier)
 
-        Button(onClick = {
-            viewModel.changeMessage("I am changed")
-        }) {
-            Text(text = "Change your mama")
-        }
         Button(onClick = {viewModel.setPackageListOpenState(true)}) {
             Text(text = "Open package list dialog")
         }
