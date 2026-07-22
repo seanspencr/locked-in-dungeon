@@ -18,19 +18,21 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.lockedindungeon.data.local.entities.BlockingType
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.viewmodels.BlockingDetailViewmodel
 
 @Composable
 fun BlockingDetailDialog(
     packageName: String,
     displayName: String,
+    targetType: TargetType,
     onDismiss: () -> Unit,
     viewModel: BlockingDetailViewmodel = hiltViewModel()
 ) {
     val state = viewModel.state.value
 
     LaunchedEffect(packageName) {
-        viewModel.setApp(packageName, displayName)
+        viewModel.setApp(packageName, displayName, targetType)
     }
 
     Dialog(
@@ -49,13 +51,16 @@ fun BlockingDetailDialog(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val iconDrawable = LocalContext.current.packageManager.getApplicationIcon(packageName)
-                val iconBitmap = iconDrawable.toBitmap(80, 80)
-                Image(
-                    bitmap = iconBitmap.asImageBitmap(),
-                    contentDescription = "App Icon",
-                    modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
-                )
+                if (targetType == TargetType.APP) {
+                    val iconDrawable =
+                        LocalContext.current.packageManager.getApplicationIcon(packageName)
+                    val iconBitmap = iconDrawable.toBitmap(80, 80)
+                    Image(
+                        bitmap = iconBitmap.asImageBitmap(),
+                        contentDescription = "App Icon",
+                        modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
+                    )
+                }
                 Text(text = displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
 
                 Spacer(modifier = Modifier.height(16.dp))

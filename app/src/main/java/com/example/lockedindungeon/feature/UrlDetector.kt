@@ -30,16 +30,22 @@ enum class BrowserName(val packageName: String){
     MI_BROWSER("com.mi.globalbrowser"),
     HUAWEI_BROWSER("com.huawei.browser"),
     ANDROID_WEBVIEW("com.google.android.webview"),
-    ANDROID_STOCK_BROWSER("com.android.browser")
+    ANDROID_STOCK_BROWSER("com.android.browser");
+
+    companion object {
+        fun fromPackageName(packageName: String): BrowserName? {
+            return entries.find { it.packageName == packageName }
+        }
+    }
 }
 
 class UrlDetector {
 
     fun getUrl(node : AccessibilityNodeInfo, packageName: String) : String{
+        val browserName : BrowserName = BrowserName.fromPackageName(packageName) ?: return ""
+
         var nodeTree = parseAccessibilityTree(node, mutableListOf<AccessibilityNodeInfo>())
         nodeTree.forEach { it ->
-
-            val browserName : BrowserName = BrowserName.valueOf(packageName)
 
             if(it.viewIdResourceName != null && it.viewIdResourceName != "null" && it.text != null && it.text != "null"){
                 Log.d(tag, "viewId : ${it.viewIdResourceName}, descriptin : ${it.contentDescription}, uniqueId = ${it.uniqueId}, className : ${it.className} text : ${it.text} hintText : ${it.hintText ?: "no hint"} packageName : ${it.packageName}")
@@ -52,7 +58,7 @@ class UrlDetector {
         return ""
     }
 
-    private fun getUrlBarViewId(browserName: BrowserName) : String{
+    private fun getUrlBarViewId(browserName: BrowserName) : String?{
         return when(browserName){
             BrowserName.CHROME -> "com.android.chrome:id/url_bar"
             BrowserName.CHROME_BETA -> "com.android.chrome:id/url_bar"

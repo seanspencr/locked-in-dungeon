@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ data class BlockingDetailState(
     val packageName: String = "",
     val displayName: String = "",
     val blockingType: BlockingType = BlockingType.TIMER,
+    val targetType: TargetType = TargetType.APP,
     val hour: Int = 0,
     val minute: Int = 0,
     val endHour: Int = 0,
@@ -29,13 +31,14 @@ class BlockingDetailViewmodel @Inject constructor(
     private val _state = mutableStateOf(BlockingDetailState())
     val state: State<BlockingDetailState> = _state
 
-    fun setApp(packageName: String, displayName: String) {
+    fun setApp(packageName: String, displayName: String, targetType: TargetType = TargetType.APP) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.findBlockingDetail(packageName)?.collect {
                 existing ->
                 _state.value = _state.value.copy(
                     packageName = packageName,
                     displayName = displayName,
+                    targetType = targetType,
                     blockingType = existing?.blockingType ?: BlockingType.TIMER,
                     hour = if (existing?.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) / 60 else (existing?.startHour ?: 0),
                     minute = if (existing?.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) % 60 else (existing?.startMinute ?: 0),
@@ -74,6 +77,7 @@ class BlockingDetailViewmodel @Inject constructor(
                 packageNameOrUrl = _state.value.packageName,
                 displayName = _state.value.displayName,
                 blockingType = _state.value.blockingType,
+                targetType = _state.value.targetType,
                 timerDurationMinute = if (_state.value.blockingType == BlockingType.TIMER) _state.value.hour * 60 + _state.value.minute else null,
                 startHour = if (_state.value.blockingType != BlockingType.TIMER) _state.value.hour else null,
                 startMinute = if (_state.value.blockingType != BlockingType.TIMER) _state.value.minute else null,

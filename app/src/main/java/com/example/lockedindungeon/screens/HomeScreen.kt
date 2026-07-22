@@ -42,7 +42,7 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
         if (viewModel.state.value.isPackageListDialogOpen) {
             PackageListDialog(
                 onDismiss = { viewModel.setPackageListOpenState(false) },
-                onAppSelected = { pkg, name -> viewModel.openBlockingDetail(pkg, name) }
+                onAppSelected = { pkg, name, type -> viewModel.openBlockingDetail(pkg, name, type) }
             )
         }
 
@@ -50,6 +50,7 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
             BlockingDetailDialog(
                 packageName = viewModel.state.value.selectedPackageName,
                 displayName = viewModel.state.value.selectedDisplayName,
+                targetType = viewModel.state.value.selectedTargetType,
                 onDismiss = { viewModel.closeBlockingDetail() }
             )
         }

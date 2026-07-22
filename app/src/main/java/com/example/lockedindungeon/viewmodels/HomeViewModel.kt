@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.utils.parseNdefIntent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +21,8 @@ data class HomeState (
     public val nfcHashedPassword : String = "",
     public val isBlockingDetailDialogOpen: Boolean = false,
     public val selectedPackageName: String = "",
-    public val selectedDisplayName: String = ""
+    public val selectedDisplayName: String = "",
+    public val selectedTargetType: TargetType = TargetType.APP
 )
 
 @HiltViewModel
@@ -98,11 +100,12 @@ class HomeViewModel @Inject constructor(
 
     }
 
-    fun openBlockingDetail(packageName: String, displayName: String) {
+    fun openBlockingDetail(packageName: String, displayName: String, targetType: TargetType = TargetType.APP) {
         _state.value = _state.value.copy(
             isBlockingDetailDialogOpen = true,
             selectedPackageName = packageName,
             selectedDisplayName = displayName,
+            selectedTargetType = targetType,
             isPackageListDialogOpen = false
         )
     }

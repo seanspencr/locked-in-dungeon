@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.LauncherApps
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateOf
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.model.PackageInformationDto
 import android.os.Process
 import androidx.lifecycle.ViewModel
@@ -12,13 +13,17 @@ import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalR
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class PackageListState(
     val appList : List<PackageInformationDto> = listOf(),
-    val isLoading : Boolean =  false
+    val urlList : List<PackageInformationDto> = listOf(),
+    val isLoading : Boolean =  false,
+    val selectedTargetType: TargetType = TargetType.APP,
+    val urlInput: String = ""
 )
 
 @HiltViewModel
@@ -35,6 +40,14 @@ class PackageListViewModel @Inject  constructor(
         loadApps()
     }
 
+
+    fun onTargetTypeChange(targetType: TargetType) {
+        _state.value = _state.value.copy(selectedTargetType = targetType)
+    }
+
+    fun onUrlInputChange(input: String) {
+        _state.value = _state.value.copy(urlInput = input)
+    }
 
     private fun loadApps() {
 //        .launch brarti jalanin sesuatu di dlm coroutine, yang bisa switch thread itu cuma bisa dilakukan klo di dlm coroutine
@@ -70,19 +83,22 @@ class PackageListViewModel @Inject  constructor(
             }
 
             repository.selectBlockingDetails()?.collect { details ->
-                details?.forEach {
+                val urls = details?.filter { it.targetType == TargetType.URL }?.map {
+                    PackageInformationDto(it.packageNameOrUrl, it.displayName, true)
+                } ?: listOf()
+
+                details?.forEach { detail ->
                     allApps.find { app ->
-                        app.packageName == it.packageNameOrUrl
+                        app.packageName == detail.packageNameOrUrl
                     }?.isBlocked = true
-
-
-                    _state.value = _state.value.copy(appList = allApps, isLoading = false)
                 }
 
-                _state.value = _state.value.copy(appList = allApps, isLoading = false)
+                _state.value = _state.value.copy(
+                    appList = allApps.toList(),
+                    urlList = urls,
+                    isLoading = false
+                )
             }
-
-
         }
     }
 }
