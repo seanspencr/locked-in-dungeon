@@ -83,16 +83,16 @@ class UrlDetector {
             BrowserName.CHROME_BETA -> "com.android.chrome:id/url_bar"
             BrowserName.CHROME_DEV -> "com.android.chrome:id/url_bar"
             BrowserName.CHROME_CANARY -> "com.android.chrome:id/url_bar"
+            BrowserName.SAMSUNG_INTERNET -> "com.sec.android.app.sbrowser:id/location_bar_edit_text"
+            BrowserName.BRAVE -> "com.brave.browser:id/url_bar"
             BrowserName.FIREFOX -> TODO()
             BrowserName.FIREFOX_BETA -> TODO()
             BrowserName.FIREFOX_NIGHTLY -> TODO()
             BrowserName.FIREFOX_FOCUS -> TODO()
-            BrowserName.SAMSUNG_INTERNET -> TODO()
             BrowserName.OPERA -> TODO()
             BrowserName.OPERA_MINI -> TODO()
-            BrowserName.OPERA_GX -> TODO()
             BrowserName.EDGE -> TODO()
-            BrowserName.BRAVE -> "com.brave.browser:id/url_bar"
+            BrowserName.OPERA_GX -> TODO()
             BrowserName.UC_BROWSER -> TODO()
             BrowserName.DUCKDUCKGO -> TODO()
             BrowserName.VIVALDI -> TODO()

@@ -15,7 +15,6 @@ import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import com.example.lockedindungeon.feature.UrlDetector
-import com.example.lockedindungeon.utils.RedirectTokenManager
 import com.example.lockedindungeon.utils.isBrowser
 import dagger.hilt.EntryPoints
 import dagger.hilt.components.SingletonComponent
@@ -103,16 +102,11 @@ class AppBlockService: AccessibilityService() {
 
                     //  --------  handle blocking by url name
                     var shouldBlockUrl : Boolean = false
-                    Log.d(tag, "packageName : ${ev.packageName.toString()}")
                     if(isBrowser(ev.packageName.toString())){
-                        Log.d(tag, "browser detected")
                         shouldBlockUrl = isUrlShouldBlocked(ev.source, ev.packageName.toString())
                     }
 
                     if(shouldBlockPackage || shouldBlockUrl){
-                        val token = RedirectTokenManager.generateToken()
-                        val blockUri = Uri.parse("content://com.example.lockedindungeon/files/block/block-page.html?token=$token")
-
                         if (shouldBlockUrl && ev.source != null) {
                             // Force the browser to navigate away from the blocked page immediately
                             val stopIntent = Intent(Intent.ACTION_VIEW, Uri.parse("about:blank")).apply {
@@ -121,20 +115,13 @@ class AppBlockService: AccessibilityService() {
                             }
                             startActivity(stopIntent)
                             
-                            // Visually update the URL bar
-                            urlDetector.redirect(ev.source!!, ev.packageName.toString(), blockUri.toString())
+                            // Visually update the URL bar to about:blank as requested
+                            urlDetector.redirect(ev.source!!, ev.packageName.toString(), "about:blank")
                         }
 
-                        val intent = if (shouldBlockUrl) {
-                            Intent(applicationContext, BlockActivity::class.java).apply {
-                                action = Intent.ACTION_VIEW
-                                data = blockUri
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            }
-                        } else {
-                            Intent(applicationContext, BlockActivity::class.java).apply {
-                                data = blockUri
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        val intent = Intent(applicationContext, BlockActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            if (!shouldBlockUrl) {
                                 putExtra("BLOCKED_PACKAGE", ev.packageName)
                             }
                         }
@@ -142,7 +129,7 @@ class AppBlockService: AccessibilityService() {
                         // Small delay or back action to interrupt any remaining browser activity
                         withContext(Dispatchers.Default){
                             run {
-                                performGlobalAction(GLOBAL_ACTION_BACK)
+//                                performGlobalAction(GLOBAL_ACTION_BACK)
                                 delay(200.milliseconds)
                                 startActivity(intent)
                             }
