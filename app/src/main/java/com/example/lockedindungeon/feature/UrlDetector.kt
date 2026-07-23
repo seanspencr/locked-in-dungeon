@@ -1,5 +1,6 @@
 package com.example.lockedindungeon.feature
 
+import android.os.Bundle
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
@@ -58,6 +59,20 @@ class UrlDetector {
         return ""
     }
 
+    fun redirect(node: AccessibilityNodeInfo, packageName: String, newUrl: String) {
+        val browserName = BrowserName.fromPackageName(packageName) ?: return
+        val urlBarId = getUrlBarViewId(browserName) ?: return
+
+        val nodes = node.findAccessibilityNodeInfosByViewId(urlBarId)
+        if (nodes.isNotEmpty()) {
+            val urlBar = nodes[0]
+            urlBar.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
+            val bundle = Bundle()
+            bundle.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, newUrl)
+            urlBar.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, bundle)
+        }
+    }
+
     private fun getUrlBarViewId(browserName: BrowserName) : String?{
         return when(browserName){
             BrowserName.CHROME -> "com.android.chrome:id/url_bar"
@@ -73,7 +88,7 @@ class UrlDetector {
             BrowserName.OPERA_MINI -> TODO()
             BrowserName.OPERA_GX -> TODO()
             BrowserName.EDGE -> TODO()
-            BrowserName.BRAVE -> TODO()
+            BrowserName.BRAVE -> "com.brave.browser:id/url_bar"
             BrowserName.UC_BROWSER -> TODO()
             BrowserName.DUCKDUCKGO -> TODO()
             BrowserName.VIVALDI -> TODO()

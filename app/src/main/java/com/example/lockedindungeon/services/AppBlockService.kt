@@ -3,6 +3,7 @@ package com.example.lockedindungeon.services
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -14,15 +15,19 @@ import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import com.example.lockedindungeon.feature.UrlDetector
+import com.example.lockedindungeon.utils.RedirectTokenManager
 import com.example.lockedindungeon.utils.isBrowser
 import dagger.hilt.EntryPoints
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
+import kotlin.time.Duration.Companion.milliseconds
 
 
 class AppBlockService: AccessibilityService() {
@@ -79,6 +84,7 @@ class AppBlockService: AccessibilityService() {
             stateRepository.isActive.collect {
                 isActive ->
                 if(!isActive) return@collect
+                if(event?.packageName == applicationContext.packageName) return@collect
 
                 event?.let {
                         ev ->
@@ -104,12 +110,44 @@ class AppBlockService: AccessibilityService() {
                     }
 
                     if(shouldBlockPackage || shouldBlockUrl){
-//                start activtity and show webview
-                        val intent = Intent(applicationContext, BlockActivity::class.java).apply{
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        val token = RedirectTokenManager.generateToken()
+                        val blockUri = Uri.parse("content://com.example.lockedindungeon/files/block/block-page.html?token=$token")
+
+                        if (shouldBlockUrl && ev.source != null) {
+                            // Force the browser to navigate away from the blocked page immediately
+                            val stopIntent = Intent(Intent.ACTION_VIEW, Uri.parse("about:blank")).apply {
+                                setPackage(ev.packageName.toString())
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            startActivity(stopIntent)
+                            
+                            // Visually update the URL bar
+                            urlDetector.redirect(ev.source!!, ev.packageName.toString(), blockUri.toString())
                         }
-                        intent.putExtra("BLOCKED_PACKAGE", ev.packageName)
-                        startActivity(intent)
+
+                        val intent = if (shouldBlockUrl) {
+                            Intent(applicationContext, BlockActivity::class.java).apply {
+                                action = Intent.ACTION_VIEW
+                                data = blockUri
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                        } else {
+                            Intent(applicationContext, BlockActivity::class.java).apply {
+                                data = blockUri
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                putExtra("BLOCKED_PACKAGE", ev.packageName)
+                            }
+                        }
+
+                        // Small delay or back action to interrupt any remaining browser activity
+                        withContext(Dispatchers.Default){
+                            run {
+                                performGlobalAction(GLOBAL_ACTION_BACK)
+                                delay(200.milliseconds)
+                                startActivity(intent)
+                            }
+                        }
+
                         return@collect
                     }
 
