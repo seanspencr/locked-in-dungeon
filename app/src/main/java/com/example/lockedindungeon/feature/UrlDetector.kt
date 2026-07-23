@@ -49,8 +49,12 @@ class UrlDetector {
         nodeTree.forEach { it ->
 
             if(it.viewIdResourceName != null && it.viewIdResourceName != "null" && it.text != null && it.text != "null"){
-                Log.d(tag, "viewId : ${it.viewIdResourceName}, descriptin : ${it.contentDescription}, uniqueId = ${it.uniqueId}, className : ${it.className} text : ${it.text} hintText : ${it.hintText ?: "no hint"} packageName : ${it.packageName}")
                 if(it.viewIdResourceName == getUrlBarViewId(browserName)){
+                    // If the URL bar is currently focused, the user is likely still typing or looking at suggestions.
+                    // We skip detection in this state to avoid premature blocking from autocomplete.
+                    if (it.isFocused) {
+                        return@forEach
+                    }
                     return parseDomainFromUrl(it.text.toString())
                 }
             }
