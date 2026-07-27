@@ -2,6 +2,7 @@
 agp = "9.2.1"
 coreKtx = "1.15.0"
 datastorePreferences = "1.2.1"
+dotlottieAndroidVersion = "0.5.0"
 hiltAndroid = "2.60.1"
 hiltCompilerVersion = "2.60.1"
 hiltAndroidxCompiler = "1.2.0"
@@ -48,7 +49,7 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose"}
-
+lottiefiles-dotlottie-android = { module = "com.github.LottieFiles:dotlottie-android", version.ref = "dotlottieAndroidVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
