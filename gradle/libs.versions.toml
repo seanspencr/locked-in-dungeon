@@ -2,7 +2,7 @@
 agp = "9.2.1"
 coreKtx = "1.15.0"
 datastorePreferences = "1.2.1"
-dotlottieAndroidVersion = "0.5.0"
+dotlottieAndroidVersion = "0.15.0"
 hiltAndroid = "2.60.1"
 hiltCompilerVersion = "2.60.1"
 hiltAndroidxCompiler = "1.2.0"
