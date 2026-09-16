@@ -22,7 +22,8 @@ data class HomeState (
     public val isBlockingDetailDialogOpen: Boolean = false,
     public val selectedPackageName: String = "",
     public val selectedDisplayName: String = "",
-    public val selectedTargetType: TargetType = TargetType.APP
+    public val selectedTargetType: TargetType = TargetType.APP,
+    public val currentDayStreak : Int = 0
 )
 
 @HiltViewModel
@@ -45,6 +46,14 @@ class HomeViewModel @Inject constructor(
                     it -> _state.value = _state.value.copy(
                         isBlockActive = it
                     )
+            }
+        }
+
+        viewModelScope.launch {
+            stateRepository.currentDayStreak.collect {
+                it -> _state.value = _state.value.copy(
+                    currentDayStreak = it
+                )
             }
         }
     }

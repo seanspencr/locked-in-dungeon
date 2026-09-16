@@ -69,6 +69,7 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
                 .clickable(onClick = { viewModel.toggleBlockActive() })
         )
         Text(text = viewModel.state.value.message, modifier = modifier)
+        Text(text = "Current day streak ${viewModel.state.value.currentDayStreak}", modifier = modifier)
 
         Text(text = when(viewModel.state.value.isBlockActive){
             true -> "Tap card to disable"

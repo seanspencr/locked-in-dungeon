@@ -7,6 +7,9 @@ import android.net.Uri
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import com.example.lockedindungeon.activities.BlockActivity
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
@@ -20,6 +23,7 @@ import dagger.hilt.EntryPoints
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -35,6 +39,8 @@ class AppBlockService: AccessibilityService() {
     lateinit var usageRepo: AppUsageRepository
     lateinit var stateRepository: AppStateRepository
     lateinit var urlDetector: UrlDetector
+    lateinit var serviceScope : CoroutineScope;
+    @Volatile var blockingStateCache : Boolean = false;
 
 //    IDK WHAT IS THIS tapi katanya karena accessibility service ga ngikut lifecycle yg bisa diurus sm hilt jadi gabisa
     @dagger.hilt.EntryPoint
@@ -54,6 +60,12 @@ class AppBlockService: AccessibilityService() {
         usageRepo = entryPoint.getUsageRepo()
         stateRepository = entryPoint.getStateRepository()
         urlDetector = UrlDetector()
+        serviceScope = CoroutineScope(Dispatchers.IO)
+        serviceScope.launch {
+            stateRepository.isActive.collect {
+                blockingStateCache = it;
+            }
+        }
         super.onCreate()
     }
 
@@ -79,67 +91,56 @@ class AppBlockService: AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
 
 //        Log.d(tag, "Event detected");
-        CoroutineScope(Dispatchers.IO).launch {
-            stateRepository.isActive.collect {
-                isActive ->
-                if(!isActive) return@collect
-                if(event?.packageName == applicationContext.packageName) return@collect
+        if(!blockingStateCache) return
+        if(event?.packageName == applicationContext.packageName) return
 
-                event?.let {
-                        ev ->
-                    //  --------  handle blocking by package name
-                    if(!intArrayOf(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, AccessibilityEvent.TYPE_WINDOWS_CHANGED, AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED).contains(ev.eventType)) return@collect
+
+        event?.let {
+                ev ->
+            serviceScope.launch {
+                //  --------  handle blocking by package name
+                if(!intArrayOf(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, AccessibilityEvent.TYPE_WINDOWS_CHANGED, AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED).contains(ev.eventType)) return@launch
 
 //                    Log.d(tag, "window state changed ${ev.packageName}")
 
-                    val detail : AppBlockingDetail? = blockingDetailCache.find { it.packageNameOrUrl ==  ev.packageName}
-                    if(detail == null && !isBrowser(ev.packageName.toString())) {
+                val detail : AppBlockingDetail? = blockingDetailCache.find { it.packageNameOrUrl ==  ev.packageName}
+                if(detail == null && !isBrowser(ev.packageName.toString())) {
 //                        Log.d(tag, "Package from ${ev.packageName} dteected, but not blocked")
-                        return@collect
+                    return@launch
+                }
+
+                val shouldBlockPackage : Boolean = isEventShouldBeBlocked(detail)
+
+                //  --------  handle blocking by url name
+                var shouldBlockUrl : Boolean = false
+                if(isBrowser(ev.packageName.toString())){
+                    shouldBlockUrl = isUrlShouldBlocked(ev.source, ev.packageName.toString())
+                }
+
+                if(shouldBlockPackage || shouldBlockUrl){
+                    if (shouldBlockUrl && ev.source != null) {
+                        // Force the browser to navigate away from the blocked page immediately
+                        val stopIntent = Intent(Intent.ACTION_VIEW, Uri.parse("about:blank")).apply {
+                            setPackage(ev.packageName.toString())
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        startActivity(stopIntent)
+
+                        // Visually update the URL bar to about:blank as requested
+                        urlDetector.redirect(ev.source!!, ev.packageName.toString(), "about:blank")
                     }
 
-                    val shouldBlockPackage : Boolean = isEventShouldBeBlocked(detail)
-
-                    //  --------  handle blocking by url name
-                    var shouldBlockUrl : Boolean = false
-                    if(isBrowser(ev.packageName.toString())){
-                        shouldBlockUrl = isUrlShouldBlocked(ev.source, ev.packageName.toString())
+                    val intent = Intent(applicationContext, BlockActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        if (!shouldBlockUrl) {
+                            putExtra("BLOCKED_PACKAGE", ev.packageName)
+                        }
                     }
 
-                    if(shouldBlockPackage || shouldBlockUrl){
-                        if (shouldBlockUrl && ev.source != null) {
-                            // Force the browser to navigate away from the blocked page immediately
-                            val stopIntent = Intent(Intent.ACTION_VIEW, Uri.parse("about:blank")).apply {
-                                setPackage(ev.packageName.toString())
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            }
-                            startActivity(stopIntent)
-                            
-                            // Visually update the URL bar to about:blank as requested
-                            urlDetector.redirect(ev.source!!, ev.packageName.toString(), "about:blank")
-                        }
+                    // Small delay or back action to interrupt any remaining browser activity
 
-                        val intent = Intent(applicationContext, BlockActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            if (!shouldBlockUrl) {
-                                putExtra("BLOCKED_PACKAGE", ev.packageName)
-                            }
-                        }
-
-                        // Small delay or back action to interrupt any remaining browser activity
-                        withContext(Dispatchers.Default){
-                            run {
-//                                performGlobalAction(GLOBAL_ACTION_BACK)
-                                delay(200.milliseconds)
-                                startActivity(intent)
-                            }
-                        }
-
-                        return@collect
-                    }
-
-
-
+                    delay(200.milliseconds)
+                    startActivity(intent)
                 }
             }
         }
@@ -204,7 +205,7 @@ class AppBlockService: AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.d(tag, "Service started")
-        CoroutineScope(Dispatchers.IO).launch {
+        serviceScope.launch {
             withContext(Dispatchers.IO){
                 registerBlockedPackages()
             }
@@ -215,6 +216,20 @@ class AppBlockService: AccessibilityService() {
     override fun onInterrupt() {
         Log.d(tag, "Service Interrupted")
     }
+
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        serviceScope.launch {
+            stateRepository.setActive(false)
+        }
+        return super.onUnbind(intent)
+    }
+
+
 
     fun updateMonitoredPackages(packages: Array<String>?) {
         var info = serviceInfo

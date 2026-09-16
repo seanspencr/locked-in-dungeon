@@ -48,6 +48,9 @@ class MainActivity(
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Log.d(tag, "Log d is working")
+        Log.i(tag, "Log i is working")
+        Log.e(tag, "Log e is working")
         deployAssetToInternalStorage(this, "block-page.html")
         enableEdgeToEdge()
         if(!isAccessibilityEnabled()){
