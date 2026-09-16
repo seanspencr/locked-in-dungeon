@@ -23,7 +23,8 @@ data class HomeState (
     public val selectedPackageName: String = "",
     public val selectedDisplayName: String = "",
     public val selectedTargetType: TargetType = TargetType.APP,
-    public val currentDayStreak : Int = 0
+    public val currentDayStreak : Int = 0,
+    public val count : Int = 0
 )
 
 @HiltViewModel
@@ -122,6 +123,12 @@ class HomeViewModel @Inject constructor(
     fun closeBlockingDetail() {
         _state.value = _state.value.copy(
             isBlockingDetailDialogOpen = false
+        )
+    }
+
+    fun incrementCount() {
+        _state.value = _state.value.copy(
+            count = _state.value.count + 1
         )
     }
 }

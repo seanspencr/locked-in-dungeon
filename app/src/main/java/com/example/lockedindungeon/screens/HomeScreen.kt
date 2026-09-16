@@ -28,7 +28,10 @@ import com.example.lockedindungeon.viewmodels.HomeViewModel
  import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 
 @Composable
-fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    modifier : Modifier = Modifier,
+    onNavigate : () -> Unit = {},
+    viewModel : HomeViewModel = hiltViewModel()) {
     val controller = remember { DotLottieController() }
     var isAnimationLoaded by remember { mutableStateOf(false) }
     var isStateMachineStarted by remember { mutableStateOf(false) }
@@ -76,6 +79,12 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
             false -> "Tap card to enable"
         }, modifier = modifier)
 
+        Text(text = "Current count : ${viewModel.state.value.count}")
+
+        Button(onClick = {viewModel.incrementCount()}) {
+            Text(text = "Add")
+        }
+
         Button(onClick = {viewModel.setPackageListOpenState(true)}) {
             Text(text = "Open package list dialog")
         }
@@ -89,6 +98,10 @@ fun HomeScreen(modifier : Modifier = Modifier, viewModel : HomeViewModel = hiltV
 
         Button(onClick = { viewModel.setWritePasswordDialogOpenState(true)}) {
             Text(text = "Register new card")
+        }
+
+        Button(onClick = onNavigate) {
+            Text(text = "Naavigate")
         }
 
         if (viewModel.state.value.isPackageListDialogOpen) {
