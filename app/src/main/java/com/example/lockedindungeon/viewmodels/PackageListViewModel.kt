@@ -79,7 +79,7 @@ class PackageListViewModel @Inject  constructor(
                             result.add(PackageInformationDto(appInfo.packageName, displayName))
                         }
                 }
-                result
+                result.distinctBy { it -> it.packageName }
             }
 
             repository.selectBlockingDetails()?.collect { details ->

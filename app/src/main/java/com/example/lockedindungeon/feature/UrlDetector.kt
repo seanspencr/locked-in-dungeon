@@ -43,15 +43,17 @@ enum class BrowserName(val packageName: String){
 class UrlDetector {
 
     fun getUrl(node : AccessibilityNodeInfo, packageName: String) : String{
+
         val browserName : BrowserName = BrowserName.fromPackageName(packageName) ?: return ""
 
+        Log.d(tag, "Event detected in browser $browserName")
         var nodeTree = parseAccessibilityTree(node, mutableListOf<AccessibilityNodeInfo>())
         nodeTree.forEach { it ->
-
             if(it.viewIdResourceName != null && it.viewIdResourceName != "null" && it.text != null && it.text != "null"){
                 if(it.viewIdResourceName == getUrlBarViewId(browserName)){
                     // If the URL bar is currently focused, the user is likely still typing or looking at suggestions.
                     // We skip detection in this state to avoid premature blocking from autocomplete.
+                    Log.d(tag, it.text.toString())
                     if (it.isFocused) {
                         return@forEach
                     }
