@@ -18,13 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.lockedindungeon.components.NavigationParent
+import com.example.lockedindungeon.components.ParentNavigationBar
 import com.example.lockedindungeon.feature.NfcWrapper
-import com.example.lockedindungeon.screens.BlockingListScreen
-import com.example.lockedindungeon.screens.HomeScreen
 import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
@@ -49,26 +46,6 @@ class MainActivity(
         val tag : String = "MainActivity"
     }
 
-    @Composable
-    fun AppNavigation() {
-        val navController = rememberNavController()
-        val startRoute = "example"
-
-        val homeViewModel : HomeViewModel = hiltViewModel()
-        NavHost(navController, startDestination = startRoute) {
-            composable("example") { backStackEntry ->
-                HomeScreen(
-                    viewModel = homeViewModel,
-                    onNavigate = { navController.navigate(route = "example2") }
-                )
-            }
-            composable("example2") {
-                BlockingListScreen(onNavigate = {navController.navigate(route = "example")})
-            }
-        }
-    }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -86,11 +63,17 @@ class MainActivity(
 
         setContent {
             LockedInDungeonTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    HomeScreen(
-//                        Modifier.padding(innerPadding)
-//                    )
-                    AppNavigation()
+                val navController = rememberNavController()
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        ParentNavigationBar(navController)
+                    }
+                ) { innerPadding ->
+                    NavigationParent(
+                        navController,
+                        Modifier.padding(innerPadding))
                 }
             }
         }

@@ -82,7 +82,7 @@ fun HomeScreen(
         Text(text = "Current count : ${viewModel.state.value.count}")
 
         Button(onClick = {viewModel.incrementCount()}) {
-            Text(text = "Add")
+            Text(text = "Addingasdfasdf")
         }
 
         Button(onClick = {viewModel.setPackageListOpenState(true)}) {

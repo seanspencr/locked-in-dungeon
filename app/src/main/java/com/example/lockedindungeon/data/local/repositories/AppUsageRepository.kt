@@ -1,20 +1,30 @@
 package com.example.lockedindungeon.data.local.repositories
 
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Calendar
 import javax.inject.Inject
 
+data class UsageStatsMinute(
+    val packageName : String,
+    val usageMinute : Int
+)
 
 class AppUsageRepository @Inject constructor(
     @ApplicationContext private val appContext : Context
 ) {
 
+
     public fun getUsageDurationMinutes(packageName : String) : Int{
-        val mUsageStatsManager = this.appContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val stats = getUsageStats()
+
+        return stats?.first { it.packageName == packageName }?.usageMinute ?: 0
+    }
+
+    public fun getUsageStats(): List<UsageStatsMinute>? {
+        val mUsageStatsManager =
+            this.appContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
         val startTimeMillis = Calendar.getInstance().apply {
             timeInMillis = System.currentTimeMillis()
@@ -24,15 +34,23 @@ class AppUsageRepository @Inject constructor(
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-        // The OS constructs a structural map aggregated by package key names
         val stats = mUsageStatsManager.queryUsageStats(
-            UsageStatsManager.INTERVAL_BEST,
+            UsageStatsManager.INTERVAL_DAILY,
             startTimeMillis,
             System.currentTimeMillis()
         )
 
-        val totalTimeMs = stats.filter { it.packageName == packageName }.sumOf { it -> it.totalTimeInForeground } ?: 0L
-        return (totalTimeMs / 60000).toInt()
+
+        return stats?.groupBy {
+            it -> it.packageName
+        }?.map {
+            (packagename, usage) ->
+            UsageStatsMinute(
+                packageName = packagename,
+                usageMinute = ((usage.sumOf { it -> it.totalTimeInForeground }?: 0) / 60000).toInt()
+            )
+        }
     }
+
 
 }
