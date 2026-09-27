@@ -8,6 +8,7 @@ import android.icu.text.CaseMap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +47,11 @@ import com.example.lockedindungeon.utils.minuteToHourAndMinute
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 
 @Composable
-fun UsageScreen(viewmodel : UsageViewModel = hiltViewModel(), modifier : Modifier = Modifier) {
+fun UsageScreen(
+    viewmodel : UsageViewModel = hiltViewModel(),
+    modifier : Modifier = Modifier,
+    navigateToBlockingConfigurationScreen : (String)->Unit = {}
+    ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -66,7 +71,7 @@ fun UsageScreen(viewmodel : UsageViewModel = hiltViewModel(), modifier : Modifie
 
         LazyColumn(contentPadding = PaddingValues(20.dp)){
             items(viewmodel.state.value.appUsage.filter { it -> it.usageMinute > 0 }.sortedBy { -it.usageMinute }){ usageData ->
-                UsageCard(usageData)
+                UsageCard(usageData = usageData, onClick  = navigateToBlockingConfigurationScreen)
             }
         }
     }
@@ -75,10 +80,9 @@ fun UsageScreen(viewmodel : UsageViewModel = hiltViewModel(), modifier : Modifie
 
 @Composable
 fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(packageName =
-"testing", displayName = "tetsing", usageMinute = 67)){
+    "testing", displayName = "tetsing", usageMinute = 67), onClick : (String)->Unit = {}){
 
     val icon : Bitmap = LocalContext.current.packageManager.getApplicationIcon(usageData.packageName).toBitmap(120, 120 )
-//    TODO : fetch app name
 
     val usageHourMinute = minuteToHourAndMinute(usageData.usageMinute)
     val badgeColors = if (usageHourMinute.first != null)
@@ -86,18 +90,19 @@ fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(packageName =
     else
         Pair(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)
 
-
-
-
     Row(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp)  // outer gap
             .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp))
             .padding(10.dp)
-        ,
+            .clickable(enabled = true)
+            {
+                onClick(usageData.packageName)
+            }        ,
         Arrangement.SpaceBetween,
-        Alignment.CenterVertically
+        Alignment.CenterVertically,
+
     ) {
 
 

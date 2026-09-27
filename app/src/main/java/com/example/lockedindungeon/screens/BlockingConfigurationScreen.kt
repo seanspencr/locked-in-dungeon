@@ -2,6 +2,7 @@ package com.example.lockedindungeon.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -77,87 +79,88 @@ fun BlockingConfigurationScreen(
         viewModel.setApp(packageName)
     }
 
-    Dialog(
-        onDismissRequest = onNavigateBack,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Card(
+
+    Column(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (state.targetType == TargetType.APP) {
-                    iconDrawable?.let {
-                        val iconBitmap = it.toBitmap(80, 80)
-                        Image(
-                            bitmap = iconBitmap.asImageBitmap(),
-                            contentDescription = "App Icon",
-                            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
-                        )
-                    }
-                }
-                Text(text = state.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            Arrangement.Center,
+            Alignment.CenterVertically
+        ){
+            Text(text = "Configure Blocking for ${state.displayName}",
+                modifier = Modifier.padding(vertical = 10.dp),
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center
+            )
+        }
 
-                Spacer(modifier = Modifier.height(16.dp))
+        if (state.targetType == TargetType.APP) {
+            iconDrawable?.let {
+                val iconBitmap = it.toBitmap(80, 80)
+                Image(
+                    bitmap = iconBitmap.asImageBitmap(),
+                    contentDescription = "App Icon",
+                    modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
+                )
+            }
+        }
+        Text(text = state.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
 
-                Text("Blocking Mode")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    BlockingType.entries.forEach { type ->
-                        FilterChip(
-                            selected = state.blockingType == type,
-                            onClick = { viewModel.onBlockingTypeChange(type) },
-                            label = { Text(type.name) }
-                        )
-                    }
-                }
+        Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
+        Text("Blocking Mode")
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            BlockingType.entries.forEach { type ->
+                FilterChip(
+                    selected = state.blockingType == type,
+                    onClick = { viewModel.onBlockingTypeChange(type) },
+                    label = { Text(type.name) }
+                )
+            }
+        }
 
-                when (state.blockingType) {
-                    BlockingType.TIMER -> {
-                        TimerInput(
-                            state = state,
-                            onHourChange = { viewModel.onHourChange(it) },
-                            onMinuteChange = { viewModel.onMinuteChange(it) },
-                            onSubmit = { viewModel.submit(onNavigateBack) }
-                        )
-                    }
-                    BlockingType.BLACKLIST -> {
-                        BlacklistInput(
-                            state = state,
-                            onStartTimeChange = { h, m ->
-                                viewModel.onHourChange(h)
-                                viewModel.onMinuteChange(m)
-                            },
-                            onEndTimeChange = { h, m ->
-                                viewModel.onEndHourChange(h)
-                                viewModel.onEndMinuteChange(m)
-                            },
-                            onSubmit = { viewModel.submit(onNavigateBack) }
-                        )
-                    }
-                    BlockingType.WHITELIST -> {
-                        WhitelistInput(
-                            state = state,
-                            onStartTimeChange = { h, m ->
-                                viewModel.onHourChange(h)
-                                viewModel.onMinuteChange(m)
-                            },
-                            onEndTimeChange = { h, m ->
-                                viewModel.onEndHourChange(h)
-                                viewModel.onEndMinuteChange(m)
-                            },
-                            onSubmit = { viewModel.submit(onNavigateBack) }
-                        )
-                    }
-                }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when (state.blockingType) {
+            BlockingType.TIMER -> {
+                TimerInput(
+                    state = state,
+                    onHourChange = { viewModel.onHourChange(it) },
+                    onMinuteChange = { viewModel.onMinuteChange(it) },
+                    onSubmit = { viewModel.submit(onNavigateBack) }
+                )
+            }
+            BlockingType.BLACKLIST -> {
+                BlacklistInput(
+                    state = state,
+                    onStartTimeChange = { h, m ->
+                        viewModel.onHourChange(h)
+                        viewModel.onMinuteChange(m)
+                    },
+                    onEndTimeChange = { h, m ->
+                        viewModel.onEndHourChange(h)
+                        viewModel.onEndMinuteChange(m)
+                    },
+                    onSubmit = { viewModel.submit(onNavigateBack) }
+                )
+            }
+            BlockingType.WHITELIST -> {
+                WhitelistInput(
+                    state = state,
+                    onStartTimeChange = { h, m ->
+                        viewModel.onHourChange(h)
+                        viewModel.onMinuteChange(m)
+                    },
+                    onEndTimeChange = { h, m ->
+                        viewModel.onEndHourChange(h)
+                        viewModel.onEndMinuteChange(m)
+                    },
+                    onSubmit = { viewModel.submit(onNavigateBack) }
+                )
             }
         }
     }

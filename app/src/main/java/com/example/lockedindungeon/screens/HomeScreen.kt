@@ -91,9 +91,9 @@ fun HomeScreen(
             Text(text = "Addingasdfasdf")
         }
 
-        Button(onClick = {viewModel.setPackageListOpenState(true)}) {
-            Text(text = "Open package list dialog")
-        }
+//        Button(onClick = {viewModel.setPackageListOpenState(true)}) {
+//            Text(text = "Open package list dialog")
+//        }
 
 //        Button(onClick = { viewModel.setNfcDialogOpenState(true); enableNfc() }) {
 //            Text(text = when{

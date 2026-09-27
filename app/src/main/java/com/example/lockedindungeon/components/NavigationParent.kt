@@ -22,7 +22,10 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.toRoute
+import com.example.lockedindungeon.screens.BlockingConfigurationScreen
 import com.example.lockedindungeon.screens.UsageScreen
+import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 import kotlinx.serialization.Serializable
 
@@ -32,11 +35,12 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
 
     val homeViewModel : HomeViewModel = hiltViewModel()
     val usageViewModel : UsageViewModel = hiltViewModel()
+    val blockingConfigurationViewmodel : BlockingConfigurationViewmodel = hiltViewModel()
     NavHost(controller, startDestination = startRoute, modifier = modifier) {
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
                 viewModel = homeViewModel,
-                onNavigate = { controller.navigate(route = NavigationRoute.BlockingListScreenRoute) }
+                onNavigate = { controller.navigate(route = NavigationRoute.BlockingConfigurationRoute("com.example.lockedindungeon")) }
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {
@@ -44,7 +48,22 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
         }
 
         composable<NavigationRoute.UsageScreenRoute> {
-            UsageScreen(viewmodel = usageViewModel)
+            UsageScreen(
+                viewmodel = usageViewModel,
+                navigateToBlockingConfigurationScreen = {
+                    packageName -> controller.navigate(NavigationRoute.BlockingConfigurationRoute(packageName))
+                }
+            )
+        }
+
+        composable<NavigationRoute.BlockingConfigurationRoute> {
+            backStackEntry ->
+            val route = backStackEntry.toRoute<NavigationRoute.BlockingConfigurationRoute>()
+            BlockingConfigurationScreen(
+                packageName = route.packageName,
+                onNavigateBack = {controller.navigateUp()},
+                viewModel = blockingConfigurationViewmodel
+            )
         }
     }
 }
@@ -57,7 +76,7 @@ fun ParentNavigationBar(controller : NavHostController, modifier: Modifier = Mod
     val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-        NavigationRouteObject.entries.forEach {
+        NavigationBarRouteObject.entries.forEach {
             NavigationBarItem(
                 selected = currentDestination?.hasRoute(it.route::class) ?: true,
                 icon = { Icon(it.icon, it.description) },
@@ -68,13 +87,12 @@ fun ParentNavigationBar(controller : NavHostController, modifier: Modifier = Mod
     }
 }
 
-enum class NavigationRouteObject(
+enum class NavigationBarRouteObject(
     val icon : ImageVector,
     val description : String,
     val route : NavigationRoute
 ) {
     HomeScreenRouteObject(Icons.Default.Home, "Home", NavigationRoute.HomeScreenRoute),
-
     BlockingListScreenRouteObject(Icons.Default.Menu, "Blocked", NavigationRoute.BlockingListScreenRoute),
     UsageScreenRouteObject(Icons.Default.BarChart, "Usage", NavigationRoute.UsageScreenRoute)
 }
