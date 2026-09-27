@@ -36,7 +36,6 @@ import com.example.lockedindungeon.viewmodels.HomeViewModel
 @Composable
 fun HomeScreen(
     modifier : Modifier = Modifier,
-    onNavigate : () -> Unit = {},
     viewModel : HomeViewModel = hiltViewModel())
 {
     val controller = remember { DotLottieController() }
@@ -75,9 +74,6 @@ fun HomeScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
-//        Text(text = viewModel.state.value.message, modifier = modifier)
-
         Text(text = "${state.currentDayStreak}", modifier = modifier, style = MaterialTheme.typography.displayMedium, textAlign = TextAlign.Center)
         Text(text = "Day Streak", modifier = modifier, textAlign = TextAlign.Center, style = MaterialTheme.typography.headlineSmall)
 
@@ -87,14 +83,14 @@ fun HomeScreen(
             Alignment.Center
         ){
 
-            DotLottieAnimation(
-                source = DotLottieSource.Asset("switch-toggle.lottie"),
-                controller = controller,
-                eventListeners = listOf(lottieOnLoadListener),
-                modifier = Modifier
-                    .size(100.dp)
-                    .clickable(onClick = { viewModel.toggleBlockActive() })
-            )
+//            DotLottieAnimation(
+//                source = DotLottieSource.Asset("switch-toggle.lottie"),
+//                controller = controller,
+//                eventListeners = listOf(lottieOnLoadListener),
+//                modifier = Modifier
+//                    .size(100.dp)
+//                    .clickable(onClick = { viewModel.toggleBlockActive() })
+//            )
             Text(text = when(state.isBlockActive){
                 true -> "Tap card to disable"
                 false -> "Tap card to enable"
@@ -102,17 +98,6 @@ fun HomeScreen(
 
         }
 
-
-//        Button(onClick = {viewModel.setPackageListOpenState(true)}) {
-//            Text(text = "Open package list dialog")
-//        }
-
-//        Button(onClick = { viewModel.setNfcDialogOpenState(true); enableNfc() }) {
-//            Text(text = when{
-//                viewModel.state.value.isBlockActive -> "Turn off blocking"
-//                else -> "Turn on blocking"
-//            })
-//        }
 
         Button(onClick = { viewModel.setIsWritePasswordDialogOpen(true)}) {
             Text(text = "Register new card")

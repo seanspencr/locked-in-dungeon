@@ -42,9 +42,7 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
     NavHost(controller, startDestination = startRoute, modifier = modifier) {
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
-                viewModel = homeViewModel,
-                onNavigate = { controller.navigate(route = NavigationRoute.BlockingConfigurationRoute("com.example.lockedindungeon",
-                    TargetType.APP)) }
+                viewModel = homeViewModel
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {
