@@ -25,8 +25,6 @@ import com.example.lockedindungeon.feature.NfcWrapper
 import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
-import com.example.lockedindungeon.viewmodels.NfcScanViewmodel
-import com.example.lockedindungeon.viewmodels.WriteTagPasswordViewmodel
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.FileOutputStream
@@ -37,8 +35,6 @@ class MainActivity(
 ) : ComponentActivity() {
 
 
-    private val nfcScanViewModel: NfcScanViewmodel by viewModels()
-    private val writeTagPasswordViewModel: WriteTagPasswordViewmodel by viewModels()
     private val homeViewModel: HomeViewModel by viewModels()
     @Inject lateinit var nfcWrapper : NfcWrapper;
 
@@ -94,12 +90,6 @@ class MainActivity(
 
         if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
             homeViewModel.onNdefIntent(intent)
-
-//            if(homeViewModel.homeState.value.isNfcDialogOpen){
-//                nfcScanViewModel.onTagDetected(intent)
-//            }else if(homeViewModel.homeState.value.isWritePasswordDialogOpen){
-//                writeTagPasswordViewModel.onTagDetected(intent)
-//            }
         }
     }
 

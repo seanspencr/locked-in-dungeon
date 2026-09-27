@@ -120,14 +120,25 @@ fun HomeScreen(
 
         if(state.isNfcDialogOpen){
             NfcDialog(
-                hashedPassword = state.nfcHashedPassword,
-                onDismiss = { viewModel.setIsNfcDialogOpen(false)},
-                onPasswordMatch = {viewModel.setIsNfcDialogOpen(false)}
+                passwordBuffer = state.nfcPasswordBuffer,
+                message = state.nfcMessage,
+                onPasswordChanged = { viewModel.onNfcPasswordChanged(it) },
+                onPasswordSubmit = { viewModel.onNfcPasswordSubmit() },
+                onDismiss = { viewModel.dismissNfcDialog() }
             )
         }
 
         if(state.isWritePasswordDialogOpen) {
-            WriteTagPasswordDialog(onDismiss = { viewModel.setIsWritePasswordDialogOpen(false)})
+            WriteTagPasswordDialog(
+                dialogState = state.dialogState,
+                writeBuffer = state.writeBuffer ?: "",
+                isTagDetected = state.isTagDetected,
+                message = state.writeTagMessage,
+                errorMessage = state.writeTagErrorMessage,
+                onPasswordChanged = { viewModel.onWriteBufferChanged(it) },
+                onPasswordSubmit = { viewModel.onWritePasswordSubmit() },
+                onDismiss = { viewModel.setIsWritePasswordDialogOpen(false) }
+            )
         }
     }
 

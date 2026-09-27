@@ -1,11 +1,6 @@
 package com.example.lockedindungeon.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.Card
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.window.Dialog
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,33 +12,31 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.viewmodels.DialogState
-import com.example.lockedindungeon.viewmodels.NfcScanViewmodel
-import com.example.lockedindungeon.viewmodels.WriteTagPasswordViewmodel
 
 
 @Composable
 fun WriteTagPasswordDialog(
-    viewModel: WriteTagPasswordViewmodel = hiltViewModel(),
+    dialogState : DialogState,
+    writeBuffer : String,
+    isTagDetected : Boolean,
+    message : String?,
+    errorMessage : String?,
+    onPasswordChanged : (String) -> Unit,
+    onPasswordSubmit : () -> Unit,
     onDismiss : () -> Unit = {}
 ) {
 
-    val  state by viewModel.state.collectAsStateWithLifecycle()
     Dialog(
-        onDismissRequest = {
-        onDismiss()
-        viewModel.reset()
-    }
-    , DialogProperties(usePlatformDefaultWidth = false)
+        onDismissRequest = onDismiss,
+        DialogProperties(usePlatformDefaultWidth = false)
     ){
         Card(
             modifier = Modifier
@@ -59,7 +52,7 @@ fun WriteTagPasswordDialog(
                 Alignment.CenterHorizontally
             ) {
 
-                when(state.dialogState ) {
+                when(dialogState) {
                     DialogState.INPUT_PASSWORD -> {
 
                         Text("Set your card password", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
@@ -68,14 +61,14 @@ fun WriteTagPasswordDialog(
 
                         Spacer(Modifier.height(24.dp))
                         TextField(
-                            value = viewModel.state.value.writeBuffer ?: "",
-                            onValueChange = { viewModel.onWriteBufferChanged(it) },
+                            value = writeBuffer,
+                            onValueChange = onPasswordChanged,
                             label = { Text("Password") }
                         )
                         Text(
-                            text = viewModel.state.value.errorMessage ?: "",
+                            text = errorMessage ?: "",
                         )
-                        Button({ viewModel.onPasswordSubmit() }) {
+                        Button(onClick = onPasswordSubmit) {
                             Text("Submit your password")
                         }
 
@@ -85,9 +78,9 @@ fun WriteTagPasswordDialog(
                         Text("Register your card", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(18.dp))
 
-                        if(state.isDetected){
+                        if(isTagDetected){
                             Text("Data successfully written into NFC card")
-                            Text(viewModel.state.value.message ?: "")
+                            Text(message ?: "")
                         }else{
                             Text("Please tap your nfc card to write the data into the card")
                         }
