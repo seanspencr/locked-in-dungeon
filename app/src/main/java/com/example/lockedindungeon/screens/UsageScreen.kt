@@ -42,7 +42,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.lockedindungeon.components.TitleBar
 import com.example.lockedindungeon.data.local.repositories.UsageStatsMinute
+import com.example.lockedindungeon.data.model.PackageInformationDto
 import com.example.lockedindungeon.utils.minuteToHourAndMinute
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 
@@ -55,19 +57,7 @@ fun UsageScreen(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(vertical = 20.dp),
-            Arrangement.Center,
-            Alignment.CenterVertically
-        ){
-            Text(
-                text = "Your App Usage",
-                style = MaterialTheme.typography.headlineLarge
-
-            )
-        }
+        TitleBar(text = "Your App Usage")
 
         LazyColumn(contentPadding = PaddingValues(20.dp)){
             items(viewmodel.state.value.appUsage.filter { it -> it.usageMinute > 0 }.sortedBy { -it.usageMinute }){ usageData ->
@@ -79,10 +69,9 @@ fun UsageScreen(
 }
 
 @Composable
-fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(packageName =
-    "testing", displayName = "tetsing", usageMinute = 67), onClick : (String)->Unit = {}){
-
-    val icon : Bitmap = LocalContext.current.packageManager.getApplicationIcon(usageData.packageName).toBitmap(120, 120 )
+fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(usageMinute = 67, packageInfo = PackageInformationDto(
+    "testing", "testing"
+)), onClick : (String)->Unit = {}){
 
     val usageHourMinute = minuteToHourAndMinute(usageData.usageMinute)
     val badgeColors = if (usageHourMinute.first != null)
@@ -98,7 +87,7 @@ fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(packageName =
             .padding(10.dp)
             .clickable(enabled = true)
             {
-                onClick(usageData.packageName)
+                onClick(usageData.packageInfo.packageName)
             }        ,
         Arrangement.SpaceBetween,
         Alignment.CenterVertically,
@@ -106,11 +95,13 @@ fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(packageName =
     ) {
 
 
-        Image(
-            bitmap = icon.asImageBitmap(),
-            contentDescription = "${usageData.packageName} Icon"
-        )
-        Text(text = usageData.displayName, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        usageData.packageInfo.icon?.asImageBitmap()?.let {
+            Image(
+                bitmap = it,
+                contentDescription = "${usageData.packageInfo.packageName} Icon"
+            )
+        }
+        Text(text = usageData.packageInfo.displayName, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
         Badge( containerColor = badgeColors.first) {
             Text(

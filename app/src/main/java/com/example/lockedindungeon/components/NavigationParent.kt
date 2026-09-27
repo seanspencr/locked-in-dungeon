@@ -26,6 +26,7 @@ import androidx.navigation.toRoute
 import com.example.lockedindungeon.screens.BlockingConfigurationScreen
 import com.example.lockedindungeon.screens.UsageScreen
 import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
+import com.example.lockedindungeon.viewmodels.BlockingListViewModel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 import kotlinx.serialization.Serializable
 
@@ -36,6 +37,7 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
     val homeViewModel : HomeViewModel = hiltViewModel()
     val usageViewModel : UsageViewModel = hiltViewModel()
     val blockingConfigurationViewmodel : BlockingConfigurationViewmodel = hiltViewModel()
+    val blockingListViewmodel : BlockingListViewModel = hiltViewModel()
     NavHost(controller, startDestination = startRoute, modifier = modifier) {
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
@@ -44,7 +46,8 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {
-            BlockingListScreen(onNavigate = {controller.navigate(route = NavigationRoute.HomeScreenRoute)})
+            BlockingListScreen(viewModel = blockingListViewmodel, navigateToBlockingConfigurationScreen = {packageName -> controller.navigate(
+                NavigationRoute.BlockingConfigurationRoute(packageName))})
         }
 
         composable<NavigationRoute.UsageScreenRoute> {

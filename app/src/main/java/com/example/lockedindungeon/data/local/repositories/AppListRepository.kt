@@ -2,8 +2,11 @@ package com.example.lockedindungeon.data.local.repositories
 
 import android.content.Context
 import android.content.pm.LauncherApps
+import android.graphics.Bitmap
 import android.os.Process
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.model.PackageInformationDto
@@ -51,9 +54,8 @@ class AppListRepository @Inject constructor(
                         if (profile == Process.myUserHandle()) "" else "(Work)"
                     val appLabel = appInfo.loadLabel(packageManager).toString()
                     val displayName = "$appLabel $profileType"
-                    result.add(PackageInformationDto(appInfo.packageName, displayName))
-
-                    Log.d(tag, PackageInformationDto(appInfo.packageName, displayName).toString())
+                    val icon : Bitmap = appContext.packageManager.getApplicationIcon(appInfo.packageName).toBitmap(120, 120 )
+                    result.add(PackageInformationDto(appInfo.packageName, displayName, icon = icon))
                 }
 
 

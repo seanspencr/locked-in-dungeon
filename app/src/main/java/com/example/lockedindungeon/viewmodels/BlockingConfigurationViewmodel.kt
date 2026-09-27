@@ -1,23 +1,21 @@
 package com.example.lockedindungeon.viewmodels
 
 import android.content.Context
-import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.AppListRepository
-import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
+import com.example.lockedindungeon.data.local.repositories.AppBlockingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import org.jetbrains.annotations.Blocking
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class BlockingConfigurationScreenState(
@@ -35,7 +33,7 @@ data class BlockingConfigurationScreenState(
 @HiltViewModel
 class BlockingConfigurationViewmodel @Inject constructor(
     @ApplicationContext val appContext: Context,
-    private val repository: PackageBlockingLocalRepository,
+    private val repository: AppBlockingRepository,
     private val appListRepository: AppListRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(BlockingConfigurationScreenState())
@@ -106,7 +104,10 @@ class BlockingConfigurationViewmodel @Inject constructor(
             )
             repository.upsertBlockingDetail(detail)
             _state.value = _state.value.copy(isSaving = false)
-            onComplete()
+
+            withContext(Dispatchers.Main){
+                onComplete()
+            }
         }
     }
 }

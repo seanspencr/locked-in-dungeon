@@ -7,16 +7,13 @@ import android.net.Uri
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateSetOf
 import com.example.lockedindungeon.activities.BlockActivity
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
-import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
+import com.example.lockedindungeon.data.local.repositories.AppBlockingRepository
 import com.example.lockedindungeon.feature.UrlDetector
 import com.example.lockedindungeon.utils.isBrowser
 import dagger.hilt.EntryPoints
@@ -27,7 +24,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.time.LocalTime
 import kotlin.time.Duration.Companion.milliseconds
@@ -35,7 +31,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class AppBlockService: AccessibilityService() {
 
-    lateinit var blockingRepo: PackageBlockingLocalRepository
+    lateinit var blockingRepo: AppBlockingRepository
     lateinit var usageRepo: AppUsageRepository
     lateinit var stateRepository: AppStateRepository
     lateinit var urlDetector: UrlDetector
@@ -46,7 +42,7 @@ class AppBlockService: AccessibilityService() {
     @dagger.hilt.EntryPoint
     @dagger.hilt.InstallIn(SingletonComponent::class)
     interface AppBlockServiceEntryPoint {
-        fun getBlockingRepo(): PackageBlockingLocalRepository
+        fun getBlockingRepo(): AppBlockingRepository
         fun getUsageRepo(): AppUsageRepository
         fun getStateRepository(): AppStateRepository
     }

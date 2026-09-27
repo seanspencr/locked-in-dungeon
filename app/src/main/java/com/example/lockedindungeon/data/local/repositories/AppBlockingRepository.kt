@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 
-class PackageBlockingLocalRepository @Inject constructor(
+class AppBlockingRepository @Inject constructor(
     private var db : AppDatabase
 ) {
 

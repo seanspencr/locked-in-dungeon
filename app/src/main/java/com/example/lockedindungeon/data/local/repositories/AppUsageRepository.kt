@@ -2,13 +2,13 @@ package com.example.lockedindungeon.data.local.repositories
 
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import com.example.lockedindungeon.data.model.PackageInformationDto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Calendar
 import javax.inject.Inject
 
 data class UsageStatsMinute(
-    val packageName : String,
-    val displayName : String,
+    val packageInfo: PackageInformationDto,
     val usageMinute : Int
 )
 
@@ -21,7 +21,7 @@ class AppUsageRepository @Inject constructor(
     public fun getUsageDurationMinutes(packageName : String) : Int{
         val stats = getUsageStats()
 
-        return stats?.first { it.packageName == packageName }?.usageMinute ?: 0
+        return stats?.first { it.packageInfo.packageName == packageName }?.usageMinute ?: 0
     }
 
     public fun getUsageStats(): List<UsageStatsMinute>? {
@@ -47,9 +47,14 @@ class AppUsageRepository @Inject constructor(
             it -> it.packageName
         }?.map {
             (packagename, usage) ->
+            val packageInfo = appListRepository.queryPackageInformation(packagename)
             UsageStatsMinute(
-                packageName = packagename,
-                displayName = appListRepository.queryPackageInformation(packagename)?.displayName ?: packagename,
+                packageInfo = PackageInformationDto(
+                    packagename,
+                    packageInfo?.displayName ?: packagename,
+                    icon = packageInfo?.icon,
+                    isBlocked = packageInfo?.isBlocked ?: false
+                ),
                 usageMinute = ((usage.sumOf { it -> it.totalTimeInForeground }?: 0) / 60000).toInt()
             )
         }

@@ -1,30 +1,22 @@
 package com.example.lockedindungeon.viewmodels
 
 import android.content.Context
-import android.content.pm.LauncherApps
-import androidx.compose.runtime.*
-import androidx.compose.runtime.mutableStateOf
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.model.PackageInformationDto
-import android.os.Process
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.repositories.AppListRepository
-import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
+import com.example.lockedindungeon.data.local.repositories.AppBlockingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.collections.copy
 
 data class PackageListState(
     val appList : List<PackageInformationDto> = listOf(),
@@ -37,7 +29,7 @@ data class PackageListState(
 @HiltViewModel
 class PackageListViewModel @Inject  constructor(
     @ApplicationContext var appContext : Context,
-    private val repository: PackageBlockingLocalRepository,
+    private val repository: AppBlockingRepository,
     private val appListRepository: AppListRepository
 ) : ViewModel()
 {

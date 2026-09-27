@@ -1,5 +1,6 @@
 package com.example.lockedindungeon.screens
 
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,11 +18,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +56,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.lockedindungeon.components.TitleBar
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.viewmodels.BlockingConfigurationScreenState
@@ -86,25 +95,27 @@ fun BlockingConfigurationScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            Modifier.fillMaxWidth(),
-            Arrangement.Center,
-            Alignment.CenterVertically
-        ){
-            Text(text = "Configure Blocking for ${state.displayName}",
-                modifier = Modifier.padding(vertical = 10.dp),
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center
-            )
-        }
 
+        TitleBar(
+            text = "Block ${state.displayName}",
+            actionLeft = {
+                IconButton(onClick = onNavigateBack){
+                    Icon(
+                        Icons.Default.ChevronLeft,
+                        contentDescription = "Back"
+                    )
+                }
+            }
+        )
         if (state.targetType == TargetType.APP) {
             iconDrawable?.let {
                 val iconBitmap = it.toBitmap(80, 80)
                 Image(
                     bitmap = iconBitmap.asImageBitmap(),
                     contentDescription = "App Icon",
-                    modifier = Modifier.size(64.dp).clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(12.dp))
                 )
             }
         }
@@ -113,15 +124,17 @@ fun BlockingConfigurationScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Blocking Mode")
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            BlockingType.entries.forEach { type ->
-                FilterChip(
-                    selected = state.blockingType == type,
-                    onClick = { viewModel.onBlockingTypeChange(type) },
-                    label = { Text(type.name) }
-                )
-            }
-        }
+
+//        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+//            BlockingType.entries.forEachIndexed { index, type ->
+
+//                FilterChip(
+//                    selected = state.blockingType == type,
+//                    onClick = { viewModel.onBlockingTypeChange(type) },
+//                    label = { Text(type.name) }
+//                )
+//            }
+//        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -314,7 +327,10 @@ fun CircularTimeRangePicker(
                     }
                 ) { change, _ ->
                     val center = Offset(size.width / 2f, size.height / 2f)
-                    val angle = (atan2(change.position.y - center.y, change.position.x - center.x) * (180f / PI.toFloat()) + 360f + 90f) % 360f
+                    val angle = (atan2(
+                        change.position.y - center.y,
+                        change.position.x - center.x
+                    ) * (180f / PI.toFloat()) + 360f + 90f) % 360f
                     val totalMinutes = (angle / 15f * 60f).toInt()
                     val h = (totalMinutes / 60) % 24
                     val m = totalMinutes % 60
@@ -349,10 +365,10 @@ fun CircularTimeRangePicker(
             )
 
             // Draw ticks and numbers
-            val paint = android.graphics.Paint().apply {
+            val paint = Paint().apply {
                 color = android.graphics.Color.WHITE
                 textSize = 14.dp.toPx()
-                textAlign = android.graphics.Paint.Align.CENTER
+                textAlign = Paint.Align.CENTER
             }
 
             for (i in 0 until 24) {
