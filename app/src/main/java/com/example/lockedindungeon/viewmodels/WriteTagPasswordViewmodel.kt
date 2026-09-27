@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import com.example.lockedindungeon.utils.hash
 import com.example.lockedindungeon.utils.writeToTag
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 
@@ -26,8 +28,8 @@ data class WriteTagPasswordState(
 
 @HiltViewModel
 class WriteTagPasswordViewmodel @Inject constructor() : ViewModel() {
-    private val _state : MutableState<WriteTagPasswordState> = mutableStateOf(WriteTagPasswordState())
-    public val state : State<WriteTagPasswordState> = _state
+    private val _state : MutableStateFlow<WriteTagPasswordState> = MutableStateFlow(WriteTagPasswordState())
+    public val state : StateFlow<WriteTagPasswordState> = _state
 
     fun onWriteBufferChanged(newStr : String){
         _state.value = _state.value.copy(

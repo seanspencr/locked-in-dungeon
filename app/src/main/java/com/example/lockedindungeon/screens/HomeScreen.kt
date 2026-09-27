@@ -3,11 +3,14 @@ package com.example.lockedindungeon.screens
  import android.util.Log
  import androidx.compose.foundation.clickable
  import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.Box
  import androidx.compose.foundation.layout.Column
  import androidx.compose.foundation.layout.fillMaxSize
+ import androidx.compose.foundation.layout.padding
  import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+ import androidx.compose.material3.MaterialTheme
+ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
  import androidx.compose.runtime.remember
@@ -19,6 +22,8 @@ import androidx.compose.runtime.LaunchedEffect
  import androidx.compose.runtime.mutableStateOf
  import androidx.compose.runtime.setValue
  import androidx.compose.ui.Alignment
+ import androidx.compose.ui.text.style.TextAlign
+ import androidx.lifecycle.compose.collectAsStateWithLifecycle
  import com.dotlottie.dlplayer.OpenUrlPolicy
  import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
  import com.lottiefiles.dotlottie.core.compose.runtime.DotLottieController
@@ -32,7 +37,8 @@ import com.example.lockedindungeon.viewmodels.HomeViewModel
 fun HomeScreen(
     modifier : Modifier = Modifier,
     onNavigate : () -> Unit = {},
-    viewModel : HomeViewModel = hiltViewModel()) {
+    viewModel : HomeViewModel = hiltViewModel())
+{
     val controller = remember { DotLottieController() }
     var isAnimationLoaded by remember { mutableStateOf(false) }
     var isStateMachineStarted by remember { mutableStateOf(false) }
@@ -41,6 +47,7 @@ fun HomeScreen(
             override fun onLoad() { isAnimationLoaded = true }
         }
     }
+    val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(isAnimationLoaded) {
         if (isAnimationLoaded) {
              val loaded = controller.stateMachineLoad("StateMachine1")
@@ -55,7 +62,7 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(isStateMachineStarted, viewModel.state.value.isBlockActive) {
+    LaunchedEffect(isStateMachineStarted, state.isBlockActive) {
         if (isStateMachineStarted) {
             controller.stateMachineSetBooleanInput("is_active", viewModel.state.value.isBlockActive)
             Log.d("HomeScreen", "Statemachine toggled")
@@ -64,31 +71,37 @@ fun HomeScreen(
 
 
     Column(
-        Modifier.fillMaxSize(),
+        Modifier.padding(48.dp).fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        DotLottieAnimation(
-            source = DotLottieSource.Asset("switch-toggle.lottie"),
-            controller = controller,
-            eventListeners = listOf(lottieOnLoadListener),
-            modifier = Modifier
-                .size(100.dp)
-                .clickable(onClick = { viewModel.toggleBlockActive() })
-        )
-        Text(text = viewModel.state.value.message, modifier = modifier)
-        Text(text = "Current day streak ${viewModel.state.value.currentDayStreak}", modifier = modifier)
 
-        Text(text = when(viewModel.state.value.isBlockActive){
-            true -> "Tap card to disable"
-            false -> "Tap card to enable"
-        }, modifier = modifier)
+//        Text(text = viewModel.state.value.message, modifier = modifier)
 
-        Text(text = "Current count : ${viewModel.state.value.count}")
+        Text(text = "${state.currentDayStreak}", modifier = modifier, style = MaterialTheme.typography.displayMedium, textAlign = TextAlign.Center)
+        Text(text = "Day Streak", modifier = modifier, textAlign = TextAlign.Center, style = MaterialTheme.typography.headlineSmall)
 
-        Button(onClick = {viewModel.incrementCount()}) {
-            Text(text = "Addingasdfasdf")
+
+        Box(
+            Modifier.fillMaxSize().weight(1f),
+            Alignment.Center
+        ){
+
+            DotLottieAnimation(
+                source = DotLottieSource.Asset("switch-toggle.lottie"),
+                controller = controller,
+                eventListeners = listOf(lottieOnLoadListener),
+                modifier = Modifier
+                    .size(100.dp)
+                    .clickable(onClick = { viewModel.toggleBlockActive() })
+            )
+            Text(text = when(state.isBlockActive){
+                true -> "Tap card to disable"
+                false -> "Tap card to enable"
+            }, modifier = modifier)
+
         }
+
 
 //        Button(onClick = {viewModel.setPackageListOpenState(true)}) {
 //            Text(text = "Open package list dialog")
@@ -101,27 +114,20 @@ fun HomeScreen(
 //            })
 //        }
 
-        Button(onClick = { viewModel.setWritePasswordDialogOpenState(true)}) {
+        Button(onClick = { viewModel.setIsWritePasswordDialogOpen(true)}) {
             Text(text = "Register new card")
         }
 
-        Button(onClick = onNavigate) {
-            Text(text = "Naavigate")
-        }
-
-        if (viewModel.state.value.isPackageListDialogOpen) {
-
-        }
-        if(viewModel.state.value.isNfcDialogOpen){
+        if(state.isNfcDialogOpen){
             NfcDialog(
-                hashedPassword = viewModel.state.value.nfcHashedPassword,
-                onDismiss = { viewModel.setNfcDialogOpenState(false)},
-                onPasswordMatch = { viewModel.setNfcDialogOpenState(false)}
+                hashedPassword = state.nfcHashedPassword,
+                onDismiss = { viewModel.setIsNfcDialogOpen(false)},
+                onPasswordMatch = {viewModel.setIsNfcDialogOpen(false)}
             )
         }
 
-        if(viewModel.state.value.isWritePasswordDialogOpen) {
-            WriteTagPasswordDialog(onDismiss = { viewModel.setWritePasswordDialogOpenState(false)})
+        if(state.isWritePasswordDialogOpen) {
+            WriteTagPasswordDialog(onDismiss = { viewModel.setIsWritePasswordDialogOpen(false)})
         }
     }
 

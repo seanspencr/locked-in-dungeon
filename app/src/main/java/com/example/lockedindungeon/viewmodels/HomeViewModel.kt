@@ -9,22 +9,18 @@ import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.AppStateRepository
 import com.example.lockedindungeon.utils.parseNdefIntent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeState (
     public val message : String,
     public val isBlockActive : Boolean = false,
-    public val isPackageListDialogOpen : Boolean = false,
-    public val isWritePasswordDialogOpen : Boolean = false,
-    public val isNfcDialogOpen : Boolean = false,
     public val nfcHashedPassword : String = "",
-    public val isBlockingDetailDialogOpen: Boolean = false,
-    public val selectedPackageName: String = "",
-    public val selectedDisplayName: String = "",
-    public val selectedTargetType: TargetType = TargetType.APP,
     public val currentDayStreak : Int = 0,
-    public val count : Int = 0
+    public val isNfcDialogOpen : Boolean = false,
+    public val isWritePasswordDialogOpen : Boolean = false,
 )
 
 @HiltViewModel
@@ -32,12 +28,12 @@ class HomeViewModel @Inject constructor(
     private val stateRepository: AppStateRepository
 ) : ViewModel() {
 
-    private val _state: MutableState<HomeState> = mutableStateOf(
+    private val _state: MutableStateFlow<HomeState> = MutableStateFlow(
         HomeState(
             message = "Test Home State"
         )
     )
-    public val state : State<HomeState> = _state
+    public val state : StateFlow<HomeState> = _state
 
 
     init {
@@ -66,7 +62,6 @@ class HomeViewModel @Inject constructor(
                 val hashedPw = content?.get(0)?.joinToString(", ") ?: ""
 
                 _state.value = _state.value.copy(
-                    isNfcDialogOpen = true,
                     nfcHashedPassword = hashedPw
                 )
             }else {
@@ -79,17 +74,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    public fun changeMessage(message : String){
-        _state.value = _state.value.copy(
-            message = message
-        )
-    }
 
-    public fun setPackageListOpenState(isOpen : Boolean){
-        _state.value = _state.value.copy(
-            isPackageListDialogOpen = isOpen
-        )
-    }
     
     public fun toggleBlockActive(){
         viewModelScope.launch {
@@ -97,36 +82,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setNfcDialogOpenState(isOpen: Boolean) {
+    fun setIsNfcDialogOpen(bool: Boolean) {
         _state.value = _state.value.copy(
-            isNfcDialogOpen = isOpen
+            isNfcDialogOpen = bool
+        )
+    }
+    fun setIsWritePasswordDialogOpen(bool: Boolean) {
+        _state.value = _state.value.copy(
+            isWritePasswordDialogOpen = bool
         )
     }
 
-    fun setWritePasswordDialogOpenState(isOpen: Boolean) {
-        _state.value = _state.value.copy(
-            isWritePasswordDialogOpen = isOpen
-        )
-
-    }
-
-    fun openBlockingDetail(packageName: String) {
-        _state.value = _state.value.copy(
-            isBlockingDetailDialogOpen = true,
-            selectedPackageName = packageName,
-            isPackageListDialogOpen = false
-        )
-    }
-
-    fun closeBlockingDetail() {
-        _state.value = _state.value.copy(
-            isBlockingDetailDialogOpen = false
-        )
-    }
-
-    fun incrementCount() {
-        _state.value = _state.value.copy(
-            count = _state.value.count + 1
-        )
-    }
 }
