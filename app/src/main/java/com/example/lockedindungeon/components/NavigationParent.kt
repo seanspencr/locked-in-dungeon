@@ -87,4 +87,6 @@ sealed interface NavigationRoute {
     object BlockingListScreenRoute : NavigationRoute
     @Serializable
     object UsageScreenRoute : NavigationRoute
+    @Serializable
+    data class BlockingConfigurationRoute(val packageName : String) : NavigationRoute
 }

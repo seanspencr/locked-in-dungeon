@@ -9,15 +9,13 @@ plugins {
 android {
     namespace = "com.example.lockedindungeon"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version = release(37)
     }
 
     defaultConfig {
         applicationId = "com.example.lockedindungeon"
-        minSdk = 36
-        targetSdk = 36
+        minSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
@@ -111,4 +109,6 @@ dependencies {
     // JSON serialization library, works with the Kotlin serialization plugin
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.compose.material.icons.extended)
-}
+
+//    google font
+    implementation(libs.androidx.compose.ui.text.google.fonts)}

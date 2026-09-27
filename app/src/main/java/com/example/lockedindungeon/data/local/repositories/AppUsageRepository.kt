@@ -8,10 +8,12 @@ import javax.inject.Inject
 
 data class UsageStatsMinute(
     val packageName : String,
+    val displayName : String,
     val usageMinute : Int
 )
 
 class AppUsageRepository @Inject constructor(
+    private val appListRepository: AppListRepository,
     @ApplicationContext private val appContext : Context
 ) {
 
@@ -23,7 +25,7 @@ class AppUsageRepository @Inject constructor(
     }
 
     public fun getUsageStats(): List<UsageStatsMinute>? {
-        val mUsageStatsManager =
+        val usageStatsManager =
             this.appContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
 
         val startTimeMillis = Calendar.getInstance().apply {
@@ -34,7 +36,7 @@ class AppUsageRepository @Inject constructor(
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
 
-        val stats = mUsageStatsManager.queryUsageStats(
+        val stats = usageStatsManager.queryUsageStats(
             UsageStatsManager.INTERVAL_DAILY,
             startTimeMillis,
             System.currentTimeMillis()
@@ -47,6 +49,7 @@ class AppUsageRepository @Inject constructor(
             (packagename, usage) ->
             UsageStatsMinute(
                 packageName = packagename,
+                displayName = appListRepository.queryPackageInformation(packagename)?.displayName ?: packagename,
                 usageMinute = ((usage.sumOf { it -> it.totalTimeInForeground }?: 0) / 60000).toInt()
             )
         }

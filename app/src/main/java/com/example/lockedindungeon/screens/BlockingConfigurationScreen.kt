@@ -1,14 +1,34 @@
-package com.example.lockedindungeon.components
+package com.example.lockedindungeon.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,22 +45,25 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.TargetType
-import com.example.lockedindungeon.viewmodels.BlockingDetailState
-import com.example.lockedindungeon.viewmodels.BlockingDetailViewmodel
+import com.example.lockedindungeon.viewmodels.BlockingConfigurationScreenState
+import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
 import java.util.Locale
-import kotlin.math.*
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 
 @Composable
-fun BlockingDetailDialog(
+fun BlockingConfigurationScreen(
     packageName: String,
-    displayName: String,
-    targetType: TargetType,
-    onDismiss: () -> Unit,
-    viewModel: BlockingDetailViewmodel = hiltViewModel()
-) {
-    val state = viewModel.state.value
+    onNavigateBack: () -> Unit,
+    viewModel: BlockingConfigurationViewmodel = hiltViewModel()
+){
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val iconDrawable = remember(packageName) {
         try {
@@ -51,11 +74,11 @@ fun BlockingDetailDialog(
     }
 
     LaunchedEffect(packageName) {
-        viewModel.setApp(packageName, displayName, targetType)
+        viewModel.setApp(packageName)
     }
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onNavigateBack,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
@@ -70,7 +93,7 @@ fun BlockingDetailDialog(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (targetType == TargetType.APP) {
+                if (state.targetType == TargetType.APP) {
                     iconDrawable?.let {
                         val iconBitmap = it.toBitmap(80, 80)
                         Image(
@@ -80,7 +103,7 @@ fun BlockingDetailDialog(
                         )
                     }
                 }
-                Text(text = displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
+                Text(text = state.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -103,7 +126,7 @@ fun BlockingDetailDialog(
                             state = state,
                             onHourChange = { viewModel.onHourChange(it) },
                             onMinuteChange = { viewModel.onMinuteChange(it) },
-                            onSubmit = { viewModel.submit(onDismiss) }
+                            onSubmit = { viewModel.submit(onNavigateBack) }
                         )
                     }
                     BlockingType.BLACKLIST -> {
@@ -117,7 +140,7 @@ fun BlockingDetailDialog(
                                 viewModel.onEndHourChange(h)
                                 viewModel.onEndMinuteChange(m)
                             },
-                            onSubmit = { viewModel.submit(onDismiss) }
+                            onSubmit = { viewModel.submit(onNavigateBack) }
                         )
                     }
                     BlockingType.WHITELIST -> {
@@ -131,7 +154,7 @@ fun BlockingDetailDialog(
                                 viewModel.onEndHourChange(h)
                                 viewModel.onEndMinuteChange(m)
                             },
-                            onSubmit = { viewModel.submit(onDismiss) }
+                            onSubmit = { viewModel.submit(onNavigateBack) }
                         )
                     }
                 }
@@ -142,7 +165,7 @@ fun BlockingDetailDialog(
 
 @Composable
 fun TimerInput(
-    state: BlockingDetailState,
+    state: BlockingConfigurationScreenState,
     onHourChange: (Int) -> Unit,
     onMinuteChange: (Int) -> Unit,
     onSubmit: () -> Unit
@@ -181,7 +204,7 @@ fun TimerInput(
 
 @Composable
 fun BlacklistInput(
-    state: BlockingDetailState,
+    state: BlockingConfigurationScreenState,
     onStartTimeChange: (Int, Int) -> Unit,
     onEndTimeChange: (Int, Int) -> Unit,
     onSubmit: () -> Unit
@@ -211,7 +234,7 @@ fun BlacklistInput(
 
 @Composable
 fun WhitelistInput(
-    state: BlockingDetailState,
+    state: BlockingConfigurationScreenState,
     onStartTimeChange: (Int, Int) -> Unit,
     onEndTimeChange: (Int, Int) -> Unit,
     onSubmit: () -> Unit
@@ -261,7 +284,7 @@ fun CircularTimeRangePicker(
                         val radius = min(size.width, size.height).toFloat() / 2f - 40.dp.toPx()
                         val startAngle = (startHour + startMinute / 60f) * 15f - 90f
                         val endAngle = (endHour + endMinute / 60f) * 15f - 90f
-                        
+
                         val startPos = Offset(
                             center.x + radius * cos(startAngle * PI.toFloat() / 180f),
                             center.y + radius * sin(startAngle * PI.toFloat() / 180f)
@@ -270,10 +293,10 @@ fun CircularTimeRangePicker(
                             center.x + radius * cos(endAngle * PI.toFloat() / 180f),
                             center.y + radius * sin(endAngle * PI.toFloat() / 180f)
                         )
-                        
+
                         val distStart = (offset - startPos).getDistance()
                         val distEnd = (offset - endPos).getDistance()
-                        
+
                         if (distStart < 40.dp.toPx() || distEnd < 40.dp.toPx()) {
                             if (distStart < distEnd) draggingStart = true else draggingEnd = true
                         }
@@ -292,7 +315,7 @@ fun CircularTimeRangePicker(
                     val totalMinutes = (angle / 15f * 60f).toInt()
                     val h = (totalMinutes / 60) % 24
                     val m = totalMinutes % 60
-                    
+
                     if (draggingStart) onStartTimeChange(h, m)
                     if (draggingEnd) onEndTimeChange(h, m)
                 }
@@ -300,19 +323,19 @@ fun CircularTimeRangePicker(
         ) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val radius = size.minDimension / 2f - 40.dp.toPx()
-            
+
             // Draw background track
             drawCircle(
                 color = Color.DarkGray.copy(alpha = 0.5f),
                 radius = radius,
                 style = Stroke(width = 30.dp.toPx())
             )
-            
+
             val startAngle = (startHour + startMinute / 60f) * 15f - 90f
             val endAngle = (endHour + endMinute / 60f) * 15f - 90f
             var sweep = endAngle - startAngle
             if (sweep < 0) sweep += 360f
-            
+
             // Draw active arc
             drawArc(
                 color = Color.Cyan,
@@ -321,21 +344,21 @@ fun CircularTimeRangePicker(
                 useCenter = false,
                 style = Stroke(width = 30.dp.toPx(), cap = StrokeCap.Round)
             )
-            
+
             // Draw ticks and numbers
             val paint = android.graphics.Paint().apply {
                 color = android.graphics.Color.WHITE
                 textSize = 14.dp.toPx()
                 textAlign = android.graphics.Paint.Align.CENTER
             }
-            
+
             for (i in 0 until 24) {
                 val angle = i * 15f - 90f
                 val rad = angle * PI.toFloat() / 180f
                 val start = Offset(center.x + (radius - 15.dp.toPx()) * cos(rad), center.y + (radius - 15.dp.toPx()) * sin(rad))
                 val end = Offset(center.x + (radius + 15.dp.toPx()) * cos(rad), center.y + (radius + 15.dp.toPx()) * sin(rad))
                 drawLine(Color.White.copy(alpha = 0.3f), start, end, strokeWidth = 2.dp.toPx())
-                
+
                 if (i % 6 == 0) {
                     val text = if (i == 0) "24" else i.toString()
                     val textRadius = radius - 35.dp.toPx()
@@ -386,7 +409,7 @@ fun CircularTimeRangePicker(
                 style = Stroke(width = 3.dp.toPx())
             )
         }
-        
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             val startTotal = startHour * 60 + startMinute
             val endTotal = endHour * 60 + endMinute

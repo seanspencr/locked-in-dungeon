@@ -1,18 +1,26 @@
 package com.example.lockedindungeon.viewmodels
 
+import android.content.Context
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.entities.TargetType
+import com.example.lockedindungeon.data.local.repositories.AppListRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import org.jetbrains.annotations.Blocking
 import javax.inject.Inject
 
-data class BlockingDetailState(
+data class BlockingConfigurationScreenState(
     val packageName: String = "",
     val displayName: String = "",
     val blockingType: BlockingType = BlockingType.TIMER,
@@ -25,28 +33,40 @@ data class BlockingDetailState(
 )
 
 @HiltViewModel
-class BlockingDetailViewmodel @Inject constructor(
-    private val repository: PackageBlockingLocalRepository
+class BlockingConfigurationViewmodel @Inject constructor(
+    @ApplicationContext val appContext: Context,
+    private val repository: PackageBlockingLocalRepository,
+    private val appListRepository: AppListRepository
 ) : ViewModel() {
-    private val _state = mutableStateOf(BlockingDetailState())
-    val state: State<BlockingDetailState> = _state
+    private val _state = MutableStateFlow(BlockingConfigurationScreenState())
+    val state: StateFlow<BlockingConfigurationScreenState> = _state
 
-    fun setApp(packageName: String, displayName: String, targetType: TargetType = TargetType.APP) {
+    fun setApp(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.findBlockingDetail(packageName)?.collect {
-                existing ->
+            val existing : AppBlockingDetail? = repository.findBlockingDetail(packageName)?.firstOrNull()
+            if(existing != null){
                 _state.value = _state.value.copy(
                     packageName = packageName,
-                    displayName = displayName,
-                    targetType = targetType,
-                    blockingType = existing?.blockingType ?: BlockingType.TIMER,
-                    hour = if (existing?.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) / 60 else (existing?.startHour ?: 0),
-                    minute = if (existing?.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) % 60 else (existing?.startMinute ?: 0),
-                    endHour = existing?.endHour ?: 0,
-                    endMinute = existing?.endMinute ?: 0
+                    displayName = existing.displayName,
+                    targetType = existing.targetType,
+                    blockingType = existing.blockingType,
+                    hour = if (existing.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) / 60 else (existing?.startHour ?: 0),
+                    minute = if (existing.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) % 60 else (existing?.startMinute ?: 0),
+                    endHour = existing.endHour ?: 0,
+                    endMinute = existing.endMinute ?: 0
+                )
+            }else{
+                _state.value = _state.value.copy(
+                    packageName = packageName,
+                    displayName = appListRepository.queryPackageInformation(packageName)?.displayName ?: packageName,
+                    targetType = TargetType.APP,
+                    blockingType = BlockingType.BLACKLIST,
+                    hour = 0,
+                    minute = 0,
+                    endHour = 0,
+                    endMinute = 0
                 )
             }
-
         }
     }
 

@@ -9,14 +9,22 @@ import com.example.lockedindungeon.data.model.PackageInformationDto
 import android.os.Process
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
+import com.example.lockedindungeon.data.local.repositories.AppListRepository
 import com.example.lockedindungeon.data.local.repositories.PackageBlockingLocalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.collections.copy
 
 data class PackageListState(
     val appList : List<PackageInformationDto> = listOf(),
@@ -29,15 +37,51 @@ data class PackageListState(
 @HiltViewModel
 class PackageListViewModel @Inject  constructor(
     @ApplicationContext var appContext : Context,
-    private val repository: PackageBlockingLocalRepository
+    private val repository: PackageBlockingLocalRepository,
+    private val appListRepository: AppListRepository
 ) : ViewModel()
 {
-    private val _state : MutableState<PackageListState> = mutableStateOf(PackageListState())
-    val state : State<PackageListState> = _state
+    private val _state : MutableStateFlow<PackageListState> = MutableStateFlow(PackageListState())
+    val state : StateFlow<PackageListState> = _state
 
 
     init {
-        loadApps()
+        loadAppsAndBlockingData()
+    }
+
+    private fun loadAppsAndBlockingData(){
+        val allApps : StateFlow<List<PackageInformationDto>> = appListRepository.appList
+        val blockingDetails :  Flow<List<AppBlockingDetail>?> = repository.selectBlockingDetails() ?: flowOf(null)
+
+        viewModelScope.launch {
+            allApps.combine(
+                blockingDetails,
+                transform = { apps, details ->
+                    Pair(apps, details)
+                }
+            ).collect { combined ->
+                val apps = combined.first
+                val details = combined.second
+
+
+                val urls = details?.filter { it.targetType == TargetType.URL }?.map {
+                    PackageInformationDto(it.packageNameOrUrl, it.displayName, true)
+                } ?: listOf()
+
+//                mark apps yang ada kedaftar di repo sebagai blocked
+                details?.forEach { detail ->
+                    apps.find { app ->
+                        app.packageName == detail.packageNameOrUrl
+                    }?.isBlocked = true
+                }
+
+                _state.value = _state.value.copy(
+                    appList = apps.toList(),
+                    urlList = urls,
+                    isLoading = false
+                )
+            }
+        }
     }
 
 
@@ -49,56 +93,5 @@ class PackageListViewModel @Inject  constructor(
         _state.value = _state.value.copy(urlInput = input)
     }
 
-    private fun loadApps() {
-//        .launch brarti jalanin sesuatu di dlm coroutine, yang bisa switch thread itu cuma bisa dilakukan klo di dlm coroutine
-        viewModelScope.launch {
-//            pake Dispatcher.Default = background thread yg cpu heavy, buat parsing gtgt
-//            Dispatchers.Main = UI thread
-//            Dispatcher.IO lebih gede dari default, biasa buat network call
 
-            val allApps = withContext(Dispatchers.Default) {
-                _state.value = _state.value.copy(
-                    isLoading = true
-                )
-
-                val launcherApps =
-                    appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
-                val packageManager = appContext.packageManager
-                val currentPackage = appContext.packageName
-                val result = mutableListOf<PackageInformationDto>()
-
-                launcherApps.profiles.forEach { profile ->
-                    launcherApps.getActivityList(null, profile)
-                        .map { it.applicationInfo }
-                        .filter { it.packageName != currentPackage }
-                        .forEach { appInfo ->
-                            val profileType =
-                                if (profile == Process.myUserHandle()) "" else "(Work)"
-                            val appLabel = appInfo.loadLabel(packageManager).toString()
-                            val displayName = "$appLabel $profileType"
-                            result.add(PackageInformationDto(appInfo.packageName, displayName))
-                        }
-                }
-                result.distinctBy { it -> it.packageName }
-            }
-
-            repository.selectBlockingDetails()?.collect { details ->
-                val urls = details?.filter { it.targetType == TargetType.URL }?.map {
-                    PackageInformationDto(it.packageNameOrUrl, it.displayName, true)
-                } ?: listOf()
-
-                details?.forEach { detail ->
-                    allApps.find { app ->
-                        app.packageName == detail.packageNameOrUrl
-                    }?.isBlocked = true
-                }
-
-                _state.value = _state.value.copy(
-                    appList = allApps.toList(),
-                    urlList = urls,
-                    isLoading = false
-                )
-            }
-        }
-    }
 }
