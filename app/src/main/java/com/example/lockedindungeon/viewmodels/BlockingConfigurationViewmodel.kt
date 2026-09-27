@@ -39,7 +39,7 @@ class BlockingConfigurationViewmodel @Inject constructor(
     private val _state = MutableStateFlow(BlockingConfigurationScreenState())
     val state: StateFlow<BlockingConfigurationScreenState> = _state
 
-    fun setApp(packageName: String) {
+    fun setApp(packageName: String, targetType: TargetType) {
         viewModelScope.launch(Dispatchers.IO) {
             val existing : AppBlockingDetail? = repository.findBlockingDetail(packageName)?.firstOrNull()
             if(existing != null){
@@ -57,7 +57,7 @@ class BlockingConfigurationViewmodel @Inject constructor(
                 _state.value = _state.value.copy(
                     packageName = packageName,
                     displayName = appListRepository.queryPackageInformation(packageName)?.displayName ?: packageName,
-                    targetType = TargetType.APP,
+                    targetType = targetType,
                     blockingType = BlockingType.BLACKLIST,
                     hour = 0,
                     minute = 0,
@@ -107,6 +107,16 @@ class BlockingConfigurationViewmodel @Inject constructor(
 
             withContext(Dispatchers.Main){
                 onComplete()
+            }
+        }
+    }
+
+    fun delete(onComplete: () -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.deleteBlockingDetail(state.value.packageName)
+
+            withContext(Dispatchers.Main){
+                onComplete.invoke()
             }
         }
     }

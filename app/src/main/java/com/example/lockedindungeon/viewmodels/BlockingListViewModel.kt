@@ -19,8 +19,8 @@ import javax.inject.Inject
 data class PackageInfoAndBlockingDetail(val blocking : AppBlockingDetail, val info : PackageInformationDto)
 data class BlockingListScreenState(
     val targetTypeFilter: TargetType = TargetType.APP,
-    val blockingDetailList: List<PackageInfoAndBlockingDetail> = listOf(),
-    val appList : List<PackageInformationDto> = listOf()
+    val appList : List<PackageInformationDto> = listOf(),
+    val blockingList : List<AppBlockingDetail> = listOf()
 )
 
 @HiltViewModel
@@ -45,18 +45,8 @@ class BlockingListViewModel @Inject constructor(
                 val appList = combined.first
                 val blockingList = combined.second
 
-
-                val result =  mutableListOf<PackageInfoAndBlockingDetail>()
-                blockingList?.forEach {
-                    block ->
-                    val packageInfo = appList.firstOrNull{block.packageNameOrUrl == it.packageName}
-                    packageInfo?.let{
-                        result.add(PackageInfoAndBlockingDetail(block, packageInfo))
-                    }
-                }
-
                 _state.value = _state.value.copy(
-                    blockingDetailList = result,
+                    blockingList = blockingList ?: listOf(),
                     appList = appList
                 )
             }

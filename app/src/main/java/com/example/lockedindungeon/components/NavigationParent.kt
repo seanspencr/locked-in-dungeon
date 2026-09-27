@@ -23,6 +23,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.screens.BlockingConfigurationScreen
 import com.example.lockedindungeon.screens.UsageScreen
 import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
@@ -42,19 +43,20 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
                 viewModel = homeViewModel,
-                onNavigate = { controller.navigate(route = NavigationRoute.BlockingConfigurationRoute("com.example.lockedindungeon")) }
+                onNavigate = { controller.navigate(route = NavigationRoute.BlockingConfigurationRoute("com.example.lockedindungeon",
+                    TargetType.APP)) }
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {
-            BlockingListScreen(viewModel = blockingListViewmodel, navigateToBlockingConfigurationScreen = {packageName -> controller.navigate(
-                NavigationRoute.BlockingConfigurationRoute(packageName))})
+            BlockingListScreen(viewModel = blockingListViewmodel, navigateToBlockingConfigurationScreen = {packageName, type -> controller.navigate(
+                NavigationRoute.BlockingConfigurationRoute(packageName, type))})
         }
 
         composable<NavigationRoute.UsageScreenRoute> {
             UsageScreen(
                 viewmodel = usageViewModel,
                 navigateToBlockingConfigurationScreen = {
-                    packageName -> controller.navigate(NavigationRoute.BlockingConfigurationRoute(packageName))
+                    packageName, type -> controller.navigate(NavigationRoute.BlockingConfigurationRoute(packageName, type))
                 }
             )
         }
@@ -65,6 +67,7 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
             BlockingConfigurationScreen(
                 packageName = route.packageName,
                 onNavigateBack = {controller.navigateUp()},
+                targetType = route.targetType,
                 viewModel = blockingConfigurationViewmodel
             )
         }
@@ -109,5 +112,5 @@ sealed interface NavigationRoute {
     @Serializable
     object UsageScreenRoute : NavigationRoute
     @Serializable
-    data class BlockingConfigurationRoute(val packageName : String) : NavigationRoute
+    data class BlockingConfigurationRoute(val packageName : String, val targetType : TargetType) : NavigationRoute
 }

@@ -24,7 +24,6 @@ import androidx.compose.runtime.LaunchedEffect
  import com.lottiefiles.dotlottie.core.compose.runtime.DotLottieController
  import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import com.example.lockedindungeon.components.NfcDialog
-import com.example.lockedindungeon.components.PackageListDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
 import com.example.lockedindungeon.viewmodels.HomeViewModel
  import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
@@ -111,10 +110,7 @@ fun HomeScreen(
         }
 
         if (viewModel.state.value.isPackageListDialogOpen) {
-            PackageListDialog(
-                onDismiss = { viewModel.setPackageListOpenState(false) },
-                onAppSelected = { pkg, name, type -> viewModel.openBlockingDetail(pkg, name, type) }
-            )
+
         }
         if(viewModel.state.value.isNfcDialogOpen){
             NfcDialog(

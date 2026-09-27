@@ -26,6 +26,9 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -33,9 +36,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.lockedindungeon.components.BlockingCard
+import com.example.lockedindungeon.components.InputBlockingUrlDialog
 import com.example.lockedindungeon.components.TitleBar
+import com.example.lockedindungeon.components.UnblockedPackageListDialog
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.entities.TargetType
+import com.example.lockedindungeon.data.model.PackageInformationDto
 import com.example.lockedindungeon.viewmodels.BlockingListViewModel
 import com.example.lockedindungeon.viewmodels.HomeViewModel
 import com.example.lockedindungeon.viewmodels.PackageInfoAndBlockingDetail
@@ -44,9 +51,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 @Composable
 fun BlockingListScreen(
     viewModel : BlockingListViewModel = hiltViewModel(),
-    navigateToBlockingConfigurationScreen : (String) -> Unit
+    navigateToBlockingConfigurationScreen : (String, TargetType) -> Unit = {str, type -> {}}
 ){
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var isDialogOpen by remember { mutableStateOf(false) }
 
     Column(
         Modifier.fillMaxSize(),
@@ -65,48 +73,43 @@ fun BlockingListScreen(
             }
         }
         LazyColumn(contentPadding = PaddingValues(20.dp)) {
-            items(state.blockingDetailList.filter { it.blocking.targetType == state.targetTypeFilter }){
-                BlockingCard(it, { packageName -> navigateToBlockingConfigurationScreen(packageName) })
+            items(state.blockingList.filter { it.targetType == state.targetTypeFilter }){
+                blocking -> val packageInfo = state.appList.firstOrNull{info -> info.packageName == blocking.packageNameOrUrl}
+                BlockingCard(
+                    blocking.packageNameOrUrl,
+                    blocking.displayName,
+                    icon = packageInfo?.icon,
+                    blockingType = blocking.blockingType,
+                    onManage = { packageName, type -> navigateToBlockingConfigurationScreen(packageName, type) },
+                    targetType = TargetType.APP
+                )
             }
         }
 
-        FloatingActionButton(onClick = {}) {
+        FloatingActionButton(onClick = {isDialogOpen = true}) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Add new"
             )
         }
     }
-}
 
-@Composable
-fun BlockingCard(detail: PackageInfoAndBlockingDetail, onManage : (String) -> Unit){
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)  // outer gap
-            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp))
-            .padding(10.dp)
-        ,
-        Arrangement.SpaceBetween,
-        Alignment.CenterVertically,
-
-        ) {
-
-
-        detail.info.icon?.asImageBitmap()?.let {
-            Image(
-                bitmap = it,
-                contentDescription = "${detail.info.packageName} Icon"
-            )
+    if(isDialogOpen){
+        when(state.targetTypeFilter){
+            TargetType.APP -> {
+                UnblockedPackageListDialog(
+                    onDismissRequest = {isDialogOpen = false},
+                    onBlockBtnClick = { packageName, type -> navigateToBlockingConfigurationScreen(packageName, type) },
+                    unblockedPackageList = state.appList.filter { info -> state.blockingList.firstOrNull{ blocking -> blocking.packageNameOrUrl == info.packageName } == null  }
+                )
+            }
+            TargetType.URL -> {
+                InputBlockingUrlDialog(
+                    onDismissRequest = { isDialogOpen = false },
+                    onSubmitClicked = {url, type -> navigateToBlockingConfigurationScreen(url, type )}
+                )
+            }
         }
-        Text(text = detail.info.displayName, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-        Badge(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-            Text(text = detail.blocking.blockingType.toString(), color = MaterialTheme.colorScheme.onPrimaryContainer)
-        }
-        Button(onClick = {onManage(detail.info.packageName)}) {
-            Text("Manage")
-        }
     }
 }

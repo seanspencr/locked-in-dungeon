@@ -110,12 +110,10 @@ class HomeViewModel @Inject constructor(
 
     }
 
-    fun openBlockingDetail(packageName: String, displayName: String, targetType: TargetType = TargetType.APP) {
+    fun openBlockingDetail(packageName: String) {
         _state.value = _state.value.copy(
             isBlockingDetailDialogOpen = true,
             selectedPackageName = packageName,
-            selectedDisplayName = displayName,
-            selectedTargetType = targetType,
             isPackageListDialogOpen = false
         )
     }

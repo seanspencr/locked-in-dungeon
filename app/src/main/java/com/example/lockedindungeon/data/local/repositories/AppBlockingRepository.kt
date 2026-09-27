@@ -29,6 +29,9 @@ class AppBlockingRepository @Inject constructor(
     fun findBlockingDetail(packageName : String) : Flow<AppBlockingDetail?>? {
         return db.appBlockingDetailDao().findByName(packageName)
     }
+    fun deleteBlockingDetail(packageNameOrUrl : String) {
+        return db.appBlockingDetailDao().delete(packageNameOrUrl)
+    }
 
 
 }

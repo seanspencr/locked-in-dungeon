@@ -31,6 +31,6 @@ interface AppBlockingDetailDao {
     @Upsert
     fun upsertAll(vararg details: AppBlockingDetail)
 
-    @Delete
-    fun delete(detail: AppBlockingDetail)
+    @Query("DELETE FROM blocking_detail WHERE packageNameOrUrl LIKE :packageNameOrUrl")
+    fun delete(packageNameOrUrl: String)
 }

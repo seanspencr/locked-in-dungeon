@@ -1,26 +1,35 @@
 package com.example.lockedindungeon.screens
 
+import android.R
 import android.graphics.Paint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
@@ -71,6 +80,7 @@ import kotlin.math.sin
 @Composable
 fun BlockingConfigurationScreen(
     packageName: String,
+    targetType: TargetType,
     onNavigateBack: () -> Unit,
     viewModel: BlockingConfigurationViewmodel = hiltViewModel()
 ){
@@ -84,16 +94,18 @@ fun BlockingConfigurationScreen(
         }
     }
 
-    LaunchedEffect(packageName) {
-        viewModel.setApp(packageName)
+    LaunchedEffect(packageName, targetType) {
+        viewModel.setApp(packageName, targetType)
     }
 
 
     Column(
             modifier = Modifier
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(vertical = 16.dp, horizontal = 32.dp)
                 .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
 
         TitleBar(
@@ -107,75 +119,83 @@ fun BlockingConfigurationScreen(
                 }
             }
         )
-        if (state.targetType == TargetType.APP) {
-            iconDrawable?.let {
-                val iconBitmap = it.toBitmap(80, 80)
-                Image(
-                    bitmap = iconBitmap.asImageBitmap(),
-                    contentDescription = "App Icon",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
+
+
+            if (state.targetType == TargetType.APP) {
+                iconDrawable?.let {
+                    val iconBitmap = it.toBitmap(80, 80)
+                    Image(
+                        bitmap = iconBitmap.asImageBitmap(),
+                        contentDescription = "App Icon",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                }
             }
-        }
-        Text(text = state.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
+            Text(text = state.displayName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 8.dp))
+            Spacer(Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Blocking Mode")
 
-//        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-//            BlockingType.entries.forEachIndexed { index, type ->
+            Text("Blocking Mode")
 
-//                FilterChip(
-//                    selected = state.blockingType == type,
-//                    onClick = { viewModel.onBlockingTypeChange(type) },
-//                    label = { Text(type.name) }
-//                )
-//            }
-//        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when (state.blockingType) {
-            BlockingType.TIMER -> {
-                TimerInput(
-                    state = state,
-                    onHourChange = { viewModel.onHourChange(it) },
-                    onMinuteChange = { viewModel.onMinuteChange(it) },
-                    onSubmit = { viewModel.submit(onNavigateBack) }
-                )
+            SingleChoiceSegmentedButtonRow() {
+                BlockingType.entries.forEachIndexed { index, block ->
+                    SegmentedButton(
+                        selected = index == state.blockingType.ordinal,
+                        onClick = { viewModel.onBlockingTypeChange(block) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = BlockingType.entries.size)
+                    ) {
+                        Text(block.toString())
+                    }
+                }
             }
-            BlockingType.BLACKLIST -> {
-                BlacklistInput(
-                    state = state,
-                    onStartTimeChange = { h, m ->
-                        viewModel.onHourChange(h)
-                        viewModel.onMinuteChange(m)
-                    },
-                    onEndTimeChange = { h, m ->
-                        viewModel.onEndHourChange(h)
-                        viewModel.onEndMinuteChange(m)
-                    },
-                    onSubmit = { viewModel.submit(onNavigateBack) }
-                )
+
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            when (state.blockingType) {
+                BlockingType.TIMER -> {
+                    TimerInput(
+                        state = state,
+                        onHourChange = { viewModel.onHourChange(it) },
+                        onMinuteChange = { viewModel.onMinuteChange(it) },
+                        onSubmit = { viewModel.submit(onNavigateBack) },
+                        onDelete = {viewModel.delete(onNavigateBack) }
+                    )
+                }
+                BlockingType.BLACKLIST -> {
+                    BlacklistInput(
+                        state = state,
+                        onStartTimeChange = { h, m ->
+                            viewModel.onHourChange(h)
+                            viewModel.onMinuteChange(m)
+                        },
+                        onEndTimeChange = { h, m ->
+                            viewModel.onEndHourChange(h)
+                            viewModel.onEndMinuteChange(m)
+                        },
+                        onSubmit = { viewModel.submit(onNavigateBack) },
+                        onDelete = {viewModel.delete(onNavigateBack) }
+                    )
+                }
+                BlockingType.WHITELIST -> {
+                    WhitelistInput(
+                        state = state,
+                        onStartTimeChange = { h, m ->
+                            viewModel.onHourChange(h)
+                            viewModel.onMinuteChange(m)
+                        },
+                        onEndTimeChange = { h, m ->
+                            viewModel.onEndHourChange(h)
+                            viewModel.onEndMinuteChange(m)
+                        },
+                        onSubmit = { viewModel.submit(onNavigateBack) },
+                        onDelete = {viewModel.delete(onNavigateBack) }
+                    )
+                }
             }
-            BlockingType.WHITELIST -> {
-                WhitelistInput(
-                    state = state,
-                    onStartTimeChange = { h, m ->
-                        viewModel.onHourChange(h)
-                        viewModel.onMinuteChange(m)
-                    },
-                    onEndTimeChange = { h, m ->
-                        viewModel.onEndHourChange(h)
-                        viewModel.onEndMinuteChange(m)
-                    },
-                    onSubmit = { viewModel.submit(onNavigateBack) }
-                )
-            }
-        }
     }
 }
 
@@ -184,7 +204,8 @@ fun TimerInput(
     state: BlockingConfigurationScreenState,
     onHourChange: (Int) -> Unit,
     onMinuteChange: (Int) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onDelete: ()->Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Duration")
@@ -205,15 +226,47 @@ fun TimerInput(
             steps = 59
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Button(
-            onClick = onSubmit,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSaving
-        ) {
-            if (state.isSaving) CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            else Text("Submit")
+        Row(Modifier.fillMaxWidth()) {
+
+
+            Button(
+                onClick = onDelete,
+                modifier = Modifier.weight(1f),
+                colors = ButtonColors(
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiaryContainer)
+            ) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = "Delete"
+                )
+                Spacer(Modifier.width(4.dp))
+                Text("Delete")
+            }
+
+
+            Spacer(Modifier.width(10.dp))
+
+
+            Button(
+                onClick = onSubmit,
+                Modifier.weight(2f),
+                enabled = !state.isSaving
+            ) {
+                Icon(
+                    Icons.Default.ArrowForward,
+                    contentDescription = "Submit"
+                )
+                Spacer(Modifier.width(4.dp))
+                if (state.isSaving) CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                else Text("Submit")
+            }
         }
     }
 }
@@ -223,7 +276,8 @@ fun BlacklistInput(
     state: BlockingConfigurationScreenState,
     onStartTimeChange: (Int, Int) -> Unit,
     onEndTimeChange: (Int, Int) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Blacklist Period", style = MaterialTheme.typography.titleMedium, color = Color.Cyan)
@@ -236,14 +290,47 @@ fun BlacklistInput(
             onStartTimeChange = onStartTimeChange,
             onEndTimeChange = onEndTimeChange
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onSubmit,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSaving
-        ) {
-            if (state.isSaving) CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            else Text("Submit")
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Row(Modifier.fillMaxWidth()) {
+
+
+            Button(
+                onClick = onDelete,
+                modifier = Modifier.weight(1f),
+                colors = ButtonColors(
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiaryContainer)
+            ) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = "Delete"
+                )
+                Spacer(Modifier.width(4.dp))
+                Text("Delete")
+            }
+
+
+            Spacer(Modifier.width(10.dp))
+
+
+            Button(
+                onClick = onSubmit,
+                Modifier.weight(2f),
+                enabled = !state.isSaving
+            ) {
+                Icon(
+                    Icons.Default.ArrowForward,
+                    contentDescription = "Submit"
+                )
+                Spacer(Modifier.width(4.dp))
+                if (state.isSaving) CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                else Text("Submit")
+            }
         }
     }
 }
@@ -253,7 +340,8 @@ fun WhitelistInput(
     state: BlockingConfigurationScreenState,
     onStartTimeChange: (Int, Int) -> Unit,
     onEndTimeChange: (Int, Int) -> Unit,
-    onSubmit: () -> Unit
+    onSubmit: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Whitelist Period", style = MaterialTheme.typography.titleMedium, color = Color.Cyan)
@@ -266,14 +354,47 @@ fun WhitelistInput(
             onStartTimeChange = onStartTimeChange,
             onEndTimeChange = onEndTimeChange
         )
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = onSubmit,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isSaving
-        ) {
-            if (state.isSaving) CircularProgressIndicator(modifier = Modifier.size(24.dp))
-            else Text("Submit")
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Row(Modifier.fillMaxWidth()) {
+
+
+            Button(
+                onClick = onDelete,
+                modifier = Modifier.weight(1f),
+                colors = ButtonColors(
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                    MaterialTheme.colorScheme.tertiaryContainer,
+                    MaterialTheme.colorScheme.onTertiaryContainer,
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiaryContainer)
+            ) {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = "Delete"
+                )
+                Spacer(Modifier.width(4.dp))
+                Text("Delete")
+            }
+
+
+            Spacer(Modifier.width(10.dp))
+
+
+            Button(
+                onClick = onSubmit,
+                Modifier.weight(2f),
+                enabled = !state.isSaving
+            ) {
+                Icon(
+                    Icons.Default.ArrowForward,
+                    contentDescription = "Submit"
+                )
+                Spacer(Modifier.width(4.dp))
+                if (state.isSaving) CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                else Text("Submit")
+            }
         }
     }
 }

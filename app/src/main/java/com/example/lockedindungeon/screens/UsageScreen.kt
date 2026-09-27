@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.lockedindungeon.components.TitleBar
+import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.UsageStatsMinute
 import com.example.lockedindungeon.data.model.PackageInformationDto
 import com.example.lockedindungeon.utils.minuteToHourAndMinute
@@ -52,7 +53,7 @@ import com.example.lockedindungeon.viewmodels.UsageViewModel
 fun UsageScreen(
     viewmodel : UsageViewModel = hiltViewModel(),
     modifier : Modifier = Modifier,
-    navigateToBlockingConfigurationScreen : (String)->Unit = {}
+    navigateToBlockingConfigurationScreen : (String, TargetType)->Unit = {target, type -> {}}
     ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -71,7 +72,7 @@ fun UsageScreen(
 @Composable
 fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(usageMinute = 67, packageInfo = PackageInformationDto(
     "testing", "testing"
-)), onClick : (String)->Unit = {}){
+)), onClick : (String, TargetType)->Unit = {str, type -> {}}){
 
     val usageHourMinute = minuteToHourAndMinute(usageData.usageMinute)
     val badgeColors = if (usageHourMinute.first != null)
@@ -87,7 +88,7 @@ fun UsageCard(usageData : UsageStatsMinute = UsageStatsMinute(usageMinute = 67, 
             .padding(10.dp)
             .clickable(enabled = true)
             {
-                onClick(usageData.packageInfo.packageName)
+                onClick(usageData.packageInfo.packageName, TargetType.APP)
             }        ,
         Arrangement.SpaceBetween,
         Alignment.CenterVertically,

@@ -25,6 +25,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,15 +38,18 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.lockedindungeon.viewmodels.PackageListViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.data.local.entities.TargetType
 
+
+//TODO  : hapus ini
 @Composable
 fun PackageListDialog(
     viewModel: PackageListViewModel = hiltViewModel(),
     onDismiss : () -> Unit = {},
-    onAppSelected: (packageName: String, displayName: String, targetType: TargetType) -> Unit
+    onAppSelected: (packageName: String) -> Unit
 ) {
-    val state = viewModel.state.value
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val appList = state.appList
     val urlList = state.urlList
 
@@ -94,7 +98,7 @@ fun PackageListDialog(
                                     placeholder = { Text("Enter URL") }
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Button(onClick = { onAppSelected(state.urlInput, state.urlInput, TargetType.URL) }) {
+                                Button(onClick = { onAppSelected(state.urlInput) }) {
                                     Text("Submit")
                                 }
                             }
@@ -131,7 +135,7 @@ fun PackageListDialog(
                                         text = app.displayName,
                                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
                                     )
-                                    Button(onClick = { onAppSelected(app.packageName, app.displayName, state.selectedTargetType) }) {
+                                    Button(onClick = { onAppSelected(app.packageName) }) {
                                         Text(when(app.isBlocked){
                                             true -> "Manage"
                                             false -> "Block"
