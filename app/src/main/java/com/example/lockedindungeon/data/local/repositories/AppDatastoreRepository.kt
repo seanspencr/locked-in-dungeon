@@ -1,10 +1,10 @@
 package com.example.lockedindungeon.data.local.repositories
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -12,19 +12,23 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import java.time.Duration
-import java.time.LocalDate
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 
 private val Context.dataStore by preferencesDataStore(name = "app_settings")
 
-class AppStateRepository @Inject constructor(@ApplicationContext val appContext : Context) {
+
+@Serializable
+data class AppSettings(val disableAttemptWord : String? = null)
+class AppDatastoreRepository @Inject constructor(
+    @ApplicationContext val appContext : Context
+) {
 
     companion object {
         val tag = "AppStateRepository"
@@ -37,6 +41,7 @@ class AppStateRepository @Inject constructor(@ApplicationContext val appContext 
     }
     private val IS_ACTIVE_KEY = booleanPreferencesKey("is_active")
     private val START_TIME_KEY = longPreferencesKey("start_time")
+    private val APP_SETTINGS_KEY = stringPreferencesKey("app_settings")
 
     val isActive: Flow<Boolean> = appContext.dataStore.data
         .map { prefs -> prefs[IS_ACTIVE_KEY] ?: false }
@@ -67,5 +72,16 @@ class AppStateRepository @Inject constructor(@ApplicationContext val appContext 
             }
         }
     }
+
+    suspend fun setSettings(settings : AppSettings){
+        appContext.dataStore.edit { prefs -> prefs[APP_SETTINGS_KEY] = Json.encodeToString(settings) }
+    }
+
+    val settings : Flow<AppSettings?> = appContext.dataStore.data.map { prefs ->
+        prefs[APP_SETTINGS_KEY]?.let {
+            jsonString -> Json.decodeFromString<AppSettings>(jsonString)
+        }
+    }
+
 
 }

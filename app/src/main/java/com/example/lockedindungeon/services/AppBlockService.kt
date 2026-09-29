@@ -11,7 +11,7 @@ import com.example.lockedindungeon.activities.BlockActivity
 import com.example.lockedindungeon.data.local.entities.BlockingType
 import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.data.local.entities.TargetType
-import com.example.lockedindungeon.data.local.repositories.AppStateRepository
+import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.AppBlockingRepository
 import com.example.lockedindungeon.feature.UrlDetector
@@ -33,7 +33,7 @@ class AppBlockService: AccessibilityService() {
 
     lateinit var blockingRepo: AppBlockingRepository
     lateinit var usageRepo: AppUsageRepository
-    lateinit var stateRepository: AppStateRepository
+    lateinit var stateRepository: AppDatastoreRepository
     lateinit var urlDetector: UrlDetector
     lateinit var serviceScope : CoroutineScope;
     @Volatile var blockingStateCache : Boolean = false;
@@ -44,7 +44,7 @@ class AppBlockService: AccessibilityService() {
     interface AppBlockServiceEntryPoint {
         fun getBlockingRepo(): AppBlockingRepository
         fun getUsageRepo(): AppUsageRepository
-        fun getStateRepository(): AppStateRepository
+        fun getStateRepository(): AppDatastoreRepository
     }
 
     override fun onCreate() {

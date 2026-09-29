@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
@@ -25,9 +26,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.screens.BlockingConfigurationScreen
+import com.example.lockedindungeon.screens.SettingsScreen
 import com.example.lockedindungeon.screens.UsageScreen
 import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
 import com.example.lockedindungeon.viewmodels.BlockingListViewModel
+import com.example.lockedindungeon.viewmodels.SettingsViewmodel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 import kotlinx.serialization.Serializable
 
@@ -39,6 +42,7 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
     val usageViewModel : UsageViewModel = hiltViewModel()
     val blockingConfigurationViewmodel : BlockingConfigurationViewmodel = hiltViewModel()
     val blockingListViewmodel : BlockingListViewModel = hiltViewModel()
+    val settingsViewmodel : SettingsViewmodel = hiltViewModel()
     NavHost(controller, startDestination = startRoute, modifier = modifier) {
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
@@ -69,6 +73,11 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
                 viewModel = blockingConfigurationViewmodel
             )
         }
+
+        composable<NavigationRoute.SettingsScreenRoute> {
+            backstackEntry ->
+                SettingsScreen(viewmodel = settingsViewmodel)
+        }
     }
 }
 
@@ -98,7 +107,8 @@ enum class NavigationBarRouteObject(
 ) {
     HomeScreenRouteObject(Icons.Default.Home, "Home", NavigationRoute.HomeScreenRoute),
     BlockingListScreenRouteObject(Icons.Default.Menu, "Blocked", NavigationRoute.BlockingListScreenRoute),
-    UsageScreenRouteObject(Icons.Default.BarChart, "Usage", NavigationRoute.UsageScreenRoute)
+    UsageScreenRouteObject(Icons.Default.BarChart, "Usage", NavigationRoute.UsageScreenRoute),
+    SettingsScreenRouteObject(Icons.Default.Settings, "Settings", NavigationRoute.SettingsScreenRoute)
 }
 
 @Serializable
@@ -111,4 +121,6 @@ sealed interface NavigationRoute {
     object UsageScreenRoute : NavigationRoute
     @Serializable
     data class BlockingConfigurationRoute(val packageName : String, val targetType : TargetType) : NavigationRoute
+    @Serializable
+    object SettingsScreenRoute : NavigationRoute
 }

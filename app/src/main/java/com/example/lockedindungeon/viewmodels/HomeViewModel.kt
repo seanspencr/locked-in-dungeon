@@ -5,7 +5,7 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.lockedindungeon.data.local.repositories.AppStateRepository
+import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.utils.hash
 import com.example.lockedindungeon.utils.parseNdefIntent
 import com.example.lockedindungeon.utils.writeToTag
@@ -42,7 +42,7 @@ data class HomeState (
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val stateRepository: AppStateRepository
+    private val stateRepository: AppDatastoreRepository
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<HomeState> = MutableStateFlow(HomeState())
