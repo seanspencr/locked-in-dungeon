@@ -21,7 +21,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.compose.runtime.LaunchedEffect
  import androidx.compose.runtime.mutableStateOf
  import androidx.compose.runtime.setValue
- import androidx.compose.ui.Alignment
+ import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
  import androidx.compose.ui.text.style.TextAlign
  import androidx.lifecycle.compose.collectAsStateWithLifecycle
  import com.dotlottie.dlplayer.OpenUrlPolicy
@@ -31,12 +32,14 @@ import androidx.compose.runtime.LaunchedEffect
 import com.example.lockedindungeon.components.NfcDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
 import com.example.lockedindungeon.viewmodels.HomeViewModel
+import com.example.lockedindungeon.viewmodels.WriteTagViewModel
  import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 
 @Composable
 fun HomeScreen(
     modifier : Modifier = Modifier,
-    viewModel : HomeViewModel = hiltViewModel())
+    viewModel : HomeViewModel = hiltViewModel(),
+    writeTagViewModel : WriteTagViewModel = hiltViewModel())
 {
     val controller = remember { DotLottieController() }
     var isAnimationLoaded by remember { mutableStateOf(false) }
@@ -47,6 +50,7 @@ fun HomeScreen(
         }
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var isWriteTagDialogOpen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(isAnimationLoaded) {
         if (isAnimationLoaded) {
              val loaded = controller.stateMachineLoad("StateMachine1")
@@ -99,8 +103,11 @@ fun HomeScreen(
         }
 
 
-        Button(onClick = { viewModel.setIsWritePasswordDialogOpen(true)}) {
-            Text(text = "Register new card")
+        Button(onClick = {
+            writeTagViewModel.reset()
+            isWriteTagDialogOpen = true
+        }) {
+            Text(text = "Reset / Register new card")
         }
 
         if(state.isNfcDialogOpen){
@@ -113,16 +120,10 @@ fun HomeScreen(
             )
         }
 
-        if(state.isWritePasswordDialogOpen) {
+        if(isWriteTagDialogOpen) {
             WriteTagPasswordDialog(
-                dialogState = state.dialogState,
-                writeBuffer = state.writeBuffer ?: "",
-                isTagDetected = state.isTagDetected,
-                message = state.writeTagMessage,
-                errorMessage = state.writeTagErrorMessage,
-                onPasswordChanged = { viewModel.onWriteBufferChanged(it) },
-                onPasswordSubmit = { viewModel.onWritePasswordSubmit() },
-                onDismiss = { viewModel.setIsWritePasswordDialogOpen(false) }
+                viewModel = writeTagViewModel,
+                onDismiss = { isWriteTagDialogOpen = false }
             )
         }
     }

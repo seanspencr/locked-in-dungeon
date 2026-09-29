@@ -1,9 +1,7 @@
 package com.example.lockedindungeon.viewmodels
 
 import android.content.Context
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.data.local.repositories.AppSettings
@@ -34,18 +32,6 @@ class SettingsViewmodel @Inject constructor(
             }
         }
     }
-
-//    fun openDialog(){
-//        _state.value = _state.value.copy(
-//            isDialogOpen = true
-//        )
-//    }
-//
-//    fun closeDialog(){
-//        _state.value = _state.value.copy(
-//            isDialogOpen = false
-//        )
-//    }
 
     fun saveDisableAttemptWord(newVal : String) {
         _state.value = _state.value.copy(

@@ -32,6 +32,7 @@ import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
 import com.example.lockedindungeon.viewmodels.BlockingListViewModel
 import com.example.lockedindungeon.viewmodels.SettingsViewmodel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
+import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -43,10 +44,13 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
     val blockingConfigurationViewmodel : BlockingConfigurationViewmodel = hiltViewModel()
     val blockingListViewmodel : BlockingListViewModel = hiltViewModel()
     val settingsViewmodel : SettingsViewmodel = hiltViewModel()
+    // shared by home and settings, so MainActivity can hand a tapped card to either
+    val writeTagViewModel : WriteTagViewModel = hiltViewModel()
     NavHost(controller, startDestination = startRoute, modifier = modifier) {
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
-                viewModel = homeViewModel
+                viewModel = homeViewModel,
+                writeTagViewModel = writeTagViewModel
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {
@@ -76,7 +80,10 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
 
         composable<NavigationRoute.SettingsScreenRoute> {
             backstackEntry ->
-                SettingsScreen(viewmodel = settingsViewmodel)
+                SettingsScreen(
+                    viewmodel = settingsViewmodel,
+                    writeTagViewModel = writeTagViewModel
+                )
         }
     }
 }

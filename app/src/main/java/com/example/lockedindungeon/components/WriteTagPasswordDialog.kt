@@ -13,29 +13,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.viewmodels.DialogState
+import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 
 
 @Composable
 fun WriteTagPasswordDialog(
-    dialogState : DialogState,
-    writeBuffer : String,
-    isTagDetected : Boolean,
-    message : String?,
-    errorMessage : String?,
-    onPasswordChanged : (String) -> Unit,
-    onPasswordSubmit : () -> Unit,
-    onDismiss : () -> Unit = {}
+    onDismiss : () -> Unit,
+    viewModel : WriteTagViewModel = hiltViewModel()
 ) {
 
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            viewModel.reset()
+            onDismiss()
+        },
         DialogProperties(usePlatformDefaultWidth = false)
     ){
         Card(
@@ -52,7 +55,7 @@ fun WriteTagPasswordDialog(
                 Alignment.CenterHorizontally
             ) {
 
-                when(dialogState) {
+                when(state.dialogState) {
                     DialogState.INPUT_PASSWORD -> {
 
                         Text("Set your card password", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
@@ -61,14 +64,14 @@ fun WriteTagPasswordDialog(
 
                         Spacer(Modifier.height(24.dp))
                         TextField(
-                            value = writeBuffer,
-                            onValueChange = onPasswordChanged,
+                            value = state.writeBuffer ?: "",
+                            onValueChange = { viewModel.onPasswordChanged(it) },
                             label = { Text("Password") }
                         )
                         Text(
-                            text = errorMessage ?: "",
+                            text = state.errorMessage ?: "",
                         )
-                        Button(onClick = onPasswordSubmit) {
+                        Button(onClick = { viewModel.onPasswordSubmit() }) {
                             Text("Submit your password")
                         }
 
@@ -78,9 +81,9 @@ fun WriteTagPasswordDialog(
                         Text("Register your card", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(18.dp))
 
-                        if(isTagDetected){
+                        if(state.isTagDetected){
                             Text("Data successfully written into NFC card")
-                            Text(message ?: "")
+                            Text(state.message ?: "")
                         }else{
                             Text("Please tap your nfc card to write the data into the card")
                         }

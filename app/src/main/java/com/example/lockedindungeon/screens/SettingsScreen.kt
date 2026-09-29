@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,12 +41,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.lockedindungeon.components.TitleBar
+import com.example.lockedindungeon.components.WriteTagPasswordDialog
 import com.example.lockedindungeon.viewmodels.SettingsViewmodel
+import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 
 @Composable
-fun SettingsScreen(viewmodel: SettingsViewmodel = viewModel()) {
+fun SettingsScreen(
+    viewmodel: SettingsViewmodel = viewModel(),
+    writeTagViewModel: WriteTagViewModel = viewModel()
+) {
 
     val state by viewmodel.state.collectAsStateWithLifecycle()
+    var isWriteTagDialogOpen by rememberSaveable { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         TitleBar(text = "Settings")
@@ -60,6 +67,25 @@ fun SettingsScreen(viewmodel: SettingsViewmodel = viewModel()) {
                 icon = Icons.Default.Password,
                 value = state.appSettings.disableAttemptWord,
                 onEditSaved = { viewmodel.saveDisableAttemptWord(it) }
+            )
+
+            Button(
+                onClick = {
+                    writeTagViewModel.reset()
+                    isWriteTagDialogOpen = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp)
+            ) {
+                Text("Reset / Register new card")
+            }
+        }
+
+        if (isWriteTagDialogOpen) {
+            WriteTagPasswordDialog(
+                viewModel = writeTagViewModel,
+                onDismiss = { isWriteTagDialogOpen = false }
             )
         }
     }

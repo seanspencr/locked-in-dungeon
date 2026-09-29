@@ -18,13 +18,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.lockedindungeon.components.NavigationParent
+import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
 import com.example.lockedindungeon.feature.NfcWrapper
 import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
+import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.FileOutputStream
@@ -36,6 +40,8 @@ class MainActivity(
 
 
     private val homeViewModel: HomeViewModel by viewModels()
+    private val writeTagViewModel: WriteTagViewModel by viewModels()
+    private lateinit var navController: NavHostController
     @Inject lateinit var nfcWrapper : NfcWrapper;
 
     companion object {
@@ -59,7 +65,7 @@ class MainActivity(
 
         setContent {
             LockedInDungeonTheme {
-                val navController = rememberNavController()
+                navController = rememberNavController()
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -88,7 +94,15 @@ class MainActivity(
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action) {
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED != intent.action) return
+
+        // a card tapped while registering a new one gets written to, no matter the screen
+        if (writeTagViewModel.onNdefIntent(intent)) return
+
+        // otherwise it is the toggle-blocking flow, which only the home screen has
+        val isOnSettings = navController.currentDestination
+            ?.hasRoute(NavigationRoute.SettingsScreenRoute::class) == true
+        if (!isOnSettings) {
             homeViewModel.onNdefIntent(intent)
         }
     }
