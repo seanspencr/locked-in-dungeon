@@ -1,6 +1,7 @@
 package com.example.lockedindungeon.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,7 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -39,6 +43,11 @@ fun NfcUnlockDialog(
 
     var inputPassword by remember { mutableStateOf("") }
     var inputDisableAttemptWord by remember { mutableStateOf("") }
+
+    // how long the block stays off before SnoozeWorker turns it back on
+    val snoozeIntervalOptions = listOf(1, 5, 10)
+    var snoozeIntervalMinutes by remember { mutableStateOf(5) }
+    var isSnoozeMenuOpen by remember { mutableStateOf(false) }
     Dialog(
         onDismissRequest = onDismiss,
         DialogProperties(usePlatformDefaultWidth = false)
@@ -80,10 +89,35 @@ fun NfcUnlockDialog(
 
                         Spacer(Modifier.height(24.dp))
 
+                        Box {
+                            OutlinedButton(onClick = { isSnoozeMenuOpen = true }) {
+                                Text("Unblock for ${intervalLabel(snoozeIntervalMinutes)}")
+                            }
+
+                            DropdownMenu(
+                                expanded = isSnoozeMenuOpen,
+                                onDismissRequest = { isSnoozeMenuOpen = false }
+                            ) {
+                                snoozeIntervalOptions.forEach { minutes ->
+                                    DropdownMenuItem(
+                                        text = { Text(intervalLabel(minutes)) },
+                                        onClick = {
+                                            snoozeIntervalMinutes = minutes
+                                            isSnoozeMenuOpen = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+
                         Button({
                             viewModel.submitPassword(
                                 inputPassword = inputPassword,
                                 onSuccess = {
+                                    // blocking goes off now, SnoozeWorker brings it back after the interval
+                                    viewModel.scheduleSnooze(snoozeIntervalMinutes)
                                     viewModel.continueState(onDisableSuccess)
                                 }
                             )
@@ -134,3 +168,5 @@ fun NfcUnlockDialog(
         }
     }
 }
+
+private fun intervalLabel(minutes : Int) = if (minutes == 1) "1 minute" else "$minutes minutes"

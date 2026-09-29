@@ -5,6 +5,8 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
@@ -17,7 +19,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Duration
 import javax.inject.Inject
@@ -45,6 +46,10 @@ class NfcUnlockDialogViewmodel @Inject constructor(
     public lateinit var state : StateFlow<NfcUnlockDialogState>
 
     private val tag : String = "NfcUnlockDialogViewmodel"
+
+    companion object {
+        const val SNOOZE_WORK_NAME = "reactivate_blocking_after_snooze"
+    }
     fun reset(){
         _state.value = NfcUnlockDialogState()
         viewModelScope.launch {
@@ -104,12 +109,16 @@ class NfcUnlockDialogViewmodel @Inject constructor(
     }
 
     public fun scheduleSnooze(durationMinute : Int = 5){
-        val request : WorkRequest = OneTimeWorkRequestBuilder<SnoozeWorker>()
+        val request : OneTimeWorkRequest = OneTimeWorkRequestBuilder<SnoozeWorker>()
             .setInitialDelay(Duration.ofMinutes(durationMinute.toLong()))
             .build()
 
-        WorkManager.getInstance(appContext).enqueue(
-            request = request
+        // REPLACE: snoozing again must not leave the older timer armed, it would re-enable
+        // blocking before the interval the user just picked is over
+        WorkManager.getInstance(appContext).enqueueUniqueWork(
+            SNOOZE_WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            request
         )
     }
 

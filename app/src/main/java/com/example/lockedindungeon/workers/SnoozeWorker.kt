@@ -1,35 +1,38 @@
 package com.example.lockedindungeon.workers
 
 import android.content.Context
+import android.util.Log
+import androidx.hilt.work.HiltWorker
+import androidx.work.CoroutineWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import javax.inject.Inject
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
+import dagger.hilt.EntryPoint
+import dagger.hilt.EntryPoints
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.first
+
+@HiltWorker
+class SnoozeWorker @AssistedInject constructor(@Assisted context : Context, @Assisted workerParams : WorkerParameters, private val datastoreRepository: AppDatastoreRepository)
+: CoroutineWorker(appContext = context, params = workerParams) {
 
 
-class SnoozeWorker @Inject constructor(
-    @ApplicationContext val appContext: Context,
-    private val datastoreRepository: AppDatastoreRepository,
-    workerParams: WorkerParameters):
-    Worker(appContext, workerParams) {
 
-    override fun doWork(): Result {
+    private val tag = "SnoozeWorker"
 
-        // Do the work here--in this case, upload the images.
+    override suspend fun doWork(): Result {
+
         activateBlocking()
 
-        // Indicate whether the work finished successfully with the Result
         return Result.success()
     }
 
-    public fun activateBlocking(){
-        CoroutineScope(Dispatchers.IO).launch{
-            datastoreRepository.setActive(true)
-        }
+    private suspend fun activateBlocking() {
+        Log.d(tag, "Activating blocking")
+        if (datastoreRepository.isActive.first()) return
+        datastoreRepository.setActive(true)
     }
 }

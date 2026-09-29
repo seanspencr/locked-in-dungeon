@@ -113,4 +113,7 @@ dependencies {
 //    google font
     implementation(libs.androidx.compose.ui.text.google.fonts)
     implementation(libs.androidx.work.runtime.ktx)
+
+    // Source: https://mvnrepository.com/artifact/androidx.hilt/hilt-work
+    implementation(libs.androidx.hilt.work)
 }
