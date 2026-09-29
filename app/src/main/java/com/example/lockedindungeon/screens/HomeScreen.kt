@@ -114,8 +114,12 @@ fun HomeScreen(
                 viewModel = nfcUnlockDialogViewmodel,
                 onDismiss = {
                     viewModel.dismissNfcDialog()
-                    viewModel.toggleBlockActive()
                     nfcUnlockDialogViewmodel.reset()
+                },
+                onDisableSuccess = {
+                    viewModel.dismissNfcDialog()
+                    nfcUnlockDialogViewmodel.reset()
+                    viewModel.toggleBlockActive()
                 }
             )
         }

@@ -74,8 +74,6 @@ class HomeViewModel @Inject constructor(
      * Checks the entered password against the one stored on the card. On a match the
      * dialog closes and blocking gets toggled, otherwise the reason is shown in the dialog.
      */
-
-
     public fun dismissNfcDialog(){
         _state.value = _state.value.copy(
             isNfcDialogOpen = false

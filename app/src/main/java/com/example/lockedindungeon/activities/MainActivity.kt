@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.os.Bundle
+import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -21,6 +22,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.example.lockedindungeon.components.NavigationParent
 import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
@@ -30,10 +34,13 @@ import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
 import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
+import com.example.lockedindungeon.workers.SnoozeWorker
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.FileOutputStream
+import java.time.Duration
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 
 @AndroidEntryPoint
 class MainActivity(
@@ -112,6 +119,16 @@ class MainActivity(
         }
     }
 
+//    fun scheduleSnooze(durationMinute : Int = 5){
+//        val request : WorkRequest = OneTimeWorkRequestBuilder<SnoozeWorker>()
+//            .setInitialDelay(Duration.ofMinutes(durationMinute.toLong()))
+//            .build()
+//
+//        WorkManager.getInstance(this).enqueue(
+//            request = request
+//        )
+//    }
+
 
 
 
@@ -140,10 +157,10 @@ class MainActivity(
     }
 
     fun hasUsageStatsPermission(): Boolean {
-        val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val appOps = getSystemService(APP_OPS_SERVICE) as AppOpsManager
         val mode = appOps.unsafeCheckOpNoThrow(
             AppOpsManager.OPSTR_GET_USAGE_STATS,
-            android.os.Process.myUid(),
+            Process.myUid(),
             packageName
         )
         return mode == AppOpsManager.MODE_ALLOWED

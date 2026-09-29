@@ -25,13 +25,13 @@ private val Context.dataStore by preferencesDataStore(name = "app_settings")
 
 
 @Serializable
-data class AppSettings(val disableAttemptWord : String? = null)
+data class AppSettings(val disableAttemptWord : String = "failure")
 class AppDatastoreRepository @Inject constructor(
     @ApplicationContext val appContext : Context
 ) {
 
     companion object {
-        val tag = "AppStateRepository"
+        const val tag = "AppStateRepository"
     }
     val ticker = flow {
         while (true){
@@ -77,9 +77,12 @@ class AppDatastoreRepository @Inject constructor(
         appContext.dataStore.edit { prefs -> prefs[APP_SETTINGS_KEY] = Json.encodeToString(settings) }
     }
 
-    val settings : Flow<AppSettings?> = appContext.dataStore.data.map { prefs ->
-        prefs[APP_SETTINGS_KEY]?.let {
-            jsonString -> Json.decodeFromString<AppSettings>(jsonString)
+    val settings : Flow<AppSettings> = appContext.dataStore.data.map { prefs ->
+        val setting = prefs[APP_SETTINGS_KEY]
+        if(setting == null){
+            AppSettings()
+        }else{
+            Json.decodeFromString<AppSettings>(setting)
         }
     }
 

@@ -25,17 +25,20 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.lockedindungeon.viewmodels.NfcUnlockDialogStateEnum
 import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 
 @Composable
 fun NfcUnlockDialog(
-    viewModel : NfcUnlockDialogViewmodel = viewModel(),
-    onDismiss : () -> Unit
+    viewModel: NfcUnlockDialogViewmodel = viewModel(),
+    onDismiss: () -> Unit,
+    onDisableSuccess: () -> Unit
 ) {
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     var inputPassword by remember { mutableStateOf("") }
+    var inputDisableAttemptWord by remember { mutableStateOf("") }
     Dialog(
         onDismissRequest = onDismiss,
         DialogProperties(usePlatformDefaultWidth = false)
@@ -52,35 +55,80 @@ fun NfcUnlockDialog(
                 Alignment.CenterHorizontally
             ) {
 
-                Text(
-                    "Please enter your password",
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center
-                )
+                when(state.state){
+                    NfcUnlockDialogStateEnum.INPUT_PASSWORD -> {
 
-                Spacer(Modifier.height(18.dp))
+                        Text(
+                            "Please enter your password",
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
+                        )
 
-                state.nfcMessage?.let {
-                    Text(it, textAlign = TextAlign.Center)
-                }
+                        Spacer(Modifier.height(18.dp))
 
-                Spacer(Modifier.height(24.dp))
+                        state.passwordInputMessage?.let {
+                            Text(it, textAlign = TextAlign.Center)
+                        }
 
-                TextField(
-                    value = inputPassword,
-                    onValueChange = { inputPassword = it },
-                    label = { Text("Password") }
-                )
+                        Spacer(Modifier.height(24.dp))
 
-                Spacer(Modifier.height(24.dp))
+                        TextField(
+                            value = inputPassword,
+                            onValueChange = { inputPassword = it },
+                            label = { Text("Password") }
+                        )
 
-                Button({
-                    viewModel.submitPassword(
-                        inputPassword = inputPassword,
-                        onSuccess = onDismiss
-                    )
-                }) {
-                    Text("Submit")
+                        Spacer(Modifier.height(24.dp))
+
+                        Button({
+                            viewModel.submitPassword(
+                                inputPassword = inputPassword,
+                                onSuccess = {
+                                    viewModel.continueState(onDisableSuccess)
+                                }
+                            )
+                        }) {
+                            Text("Submit")
+                        }
+
+
+
+                    }
+                    NfcUnlockDialogStateEnum.INPUT_DISABLE_ATTEMPT_WORD -> {
+                        TitleBar(text = "Do me a favor")
+
+
+                        Text(
+                            "Please fill exactly like the hint",
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(18.dp))
+
+                        state.disableAttemptMessage?.let {
+                            Text(it, textAlign = TextAlign.Center)
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        TextField(
+                            value = inputDisableAttemptWord,
+                            onValueChange = { inputDisableAttemptWord = it },
+                            placeholder = { state.disableAttemptWord?.let { Text(it) } },
+                            label = {Text("For unblocking the apps i commited to block, I declare that I am a")},
+                        )
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Button({
+                            viewModel.submitDisableAttemptWord(
+                                inputAttempt = inputDisableAttemptWord,
+                                onSuccess = { viewModel.continueState(onDismiss) }
+                            )
+                        }) {
+                            Text("Declare")
+                        }
+                    }
                 }
             }
         }
