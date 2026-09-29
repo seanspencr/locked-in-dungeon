@@ -13,13 +13,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class DialogState {
+enum class WriteTagDialogState {
     INPUT_PASSWORD,
     WRITE_TAG,
 }
 
 data class WriteTagState(
-    val dialogState : DialogState = DialogState.INPUT_PASSWORD,
+    val writeTagDialogState : WriteTagDialogState = WriteTagDialogState.INPUT_PASSWORD,
     val writeBuffer : String? = null,
     val isTagDetected : Boolean = false,
     val message : String? = null,
@@ -47,7 +47,7 @@ class WriteTagViewModel @Inject constructor() : ViewModel() {
     }
 
     fun onPasswordSubmit() {
-        _state.value = _state.value.copy(dialogState = DialogState.WRITE_TAG)
+        _state.value = _state.value.copy(writeTagDialogState = WriteTagDialogState.WRITE_TAG)
     }
 
     /**
@@ -57,7 +57,7 @@ class WriteTagViewModel @Inject constructor() : ViewModel() {
      */
     fun onNdefIntent(intent : Intent) : Boolean {
         val state = _state.value
-        if(state.dialogState != DialogState.WRITE_TAG) return false
+        if(state.writeTagDialogState != WriteTagDialogState.WRITE_TAG) return false
 
         viewModelScope.launch {
             writeTag(intent)

@@ -15,13 +15,11 @@ import javax.inject.Inject
 data class HomeState (
     public val message : String = "Test Home State",
     public val isBlockActive : Boolean = false,
-    public val nfcHashedPassword : String = "",
     public val currentDayStreak : Int = 0,
     public val isNfcDialogOpen : Boolean = false,
 
     // NfcDialog: read the card and toggle blocking
-    public val nfcPasswordBuffer : String = "",
-    public val nfcMessage : String? = null,
+
 )
 
 @HiltViewModel
@@ -57,13 +55,8 @@ class HomeViewModel @Inject constructor(
      * gets read and the user is asked for the password on it.
      */
     public fun onNdefIntent(intent : Intent){
-        val content = parseNdefIntent(intent)
-        val hashedPw = content?.get(0)?.joinToString(", ") ?: ""
-
+//        klo ada ndef intent brarti dia mau unlock
         _state.value = _state.value.copy(
-            nfcHashedPassword = hashedPw,
-            nfcPasswordBuffer = "",
-            nfcMessage = null,
             isNfcDialogOpen = true
         )
     }
@@ -76,38 +69,16 @@ class HomeViewModel @Inject constructor(
 
     // ---------------------------------------------------------------- NfcDialog
 
-    public fun onNfcPasswordChanged(newStr : String){
-        _state.value = _state.value.copy(
-            nfcPasswordBuffer = newStr
-        )
-    }
 
     /**
      * Checks the entered password against the one stored on the card. On a match the
      * dialog closes and blocking gets toggled, otherwise the reason is shown in the dialog.
      */
-    public fun onNfcPasswordSubmit(){
-        val password = _state.value.nfcPasswordBuffer
-        val message = when {
-            password.isEmpty() -> "Password is empty"
-            hash(password) != _state.value.nfcHashedPassword -> "Password does not match"
-            else -> {
-                toggleBlockActive()
-                dismissNfcDialog()
-                return
-            }
-        }
 
-        _state.value = _state.value.copy(
-            nfcMessage = message
-        )
-    }
 
     public fun dismissNfcDialog(){
         _state.value = _state.value.copy(
-            isNfcDialogOpen = false,
-            nfcPasswordBuffer = "",
-            nfcMessage = null
+            isNfcDialogOpen = false
         )
     }
 }

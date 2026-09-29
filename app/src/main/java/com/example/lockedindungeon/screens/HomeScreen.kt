@@ -1,14 +1,12 @@
 package com.example.lockedindungeon.screens
 
  import android.util.Log
- import androidx.compose.foundation.clickable
  import androidx.compose.foundation.layout.Arrangement
  import androidx.compose.foundation.layout.Box
  import androidx.compose.foundation.layout.Column
  import androidx.compose.foundation.layout.fillMaxSize
  import androidx.compose.foundation.layout.padding
- import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
+ import androidx.compose.material3.Button
  import androidx.compose.material3.MaterialTheme
  import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,20 +24,21 @@ import androidx.compose.ui.Alignment
  import androidx.compose.ui.text.style.TextAlign
  import androidx.lifecycle.compose.collectAsStateWithLifecycle
  import com.dotlottie.dlplayer.OpenUrlPolicy
- import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
  import com.lottiefiles.dotlottie.core.compose.runtime.DotLottieController
- import com.lottiefiles.dotlottie.core.util.DotLottieSource
-import com.example.lockedindungeon.components.NfcDialog
+ import com.example.lockedindungeon.components.NfcUnlockDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
 import com.example.lockedindungeon.viewmodels.HomeViewModel
-import com.example.lockedindungeon.viewmodels.WriteTagViewModel
+ import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
+ import com.example.lockedindungeon.viewmodels.WriteTagViewModel
  import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 
 @Composable
 fun HomeScreen(
     modifier : Modifier = Modifier,
     viewModel : HomeViewModel = hiltViewModel(),
-    writeTagViewModel : WriteTagViewModel = hiltViewModel())
+    writeTagViewModel : WriteTagViewModel = hiltViewModel(),
+    nfcUnlockDialogViewmodel: NfcUnlockDialogViewmodel = hiltViewModel()
+    )
 {
     val controller = remember { DotLottieController() }
     var isAnimationLoaded by remember { mutableStateOf(false) }
@@ -111,12 +110,13 @@ fun HomeScreen(
         }
 
         if(state.isNfcDialogOpen){
-            NfcDialog(
-                passwordBuffer = state.nfcPasswordBuffer,
-                message = state.nfcMessage,
-                onPasswordChanged = { viewModel.onNfcPasswordChanged(it) },
-                onPasswordSubmit = { viewModel.onNfcPasswordSubmit() },
-                onDismiss = { viewModel.dismissNfcDialog() }
+            NfcUnlockDialog(
+                viewModel = nfcUnlockDialogViewmodel,
+                onDismiss = {
+                    viewModel.dismissNfcDialog()
+                    viewModel.toggleBlockActive()
+                    nfcUnlockDialogViewmodel.reset()
+                }
             )
         }
 

@@ -30,6 +30,7 @@ import com.example.lockedindungeon.screens.SettingsScreen
 import com.example.lockedindungeon.screens.UsageScreen
 import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
 import com.example.lockedindungeon.viewmodels.BlockingListViewModel
+import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 import com.example.lockedindungeon.viewmodels.SettingsViewmodel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
@@ -46,11 +47,13 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
     val settingsViewmodel : SettingsViewmodel = hiltViewModel()
     // shared by home and settings, so MainActivity can hand a tapped card to either
     val writeTagViewModel : WriteTagViewModel = hiltViewModel()
+    val nfcUnlockDialogViewmodel : NfcUnlockDialogViewmodel = hiltViewModel()
     NavHost(controller, startDestination = startRoute, modifier = modifier) {
         composable<NavigationRoute.HomeScreenRoute> {
             HomeScreen(
                 viewModel = homeViewModel,
-                writeTagViewModel = writeTagViewModel
+                writeTagViewModel = writeTagViewModel,
+                nfcUnlockDialogViewmodel = nfcUnlockDialogViewmodel
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {

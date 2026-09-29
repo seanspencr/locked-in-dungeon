@@ -22,7 +22,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.lockedindungeon.viewmodels.DialogState
+import com.example.lockedindungeon.viewmodels.WriteTagDialogState
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 
 
@@ -55,8 +55,8 @@ fun WriteTagPasswordDialog(
                 Alignment.CenterHorizontally
             ) {
 
-                when(state.dialogState) {
-                    DialogState.INPUT_PASSWORD -> {
+                when(state.writeTagDialogState) {
+                    WriteTagDialogState.INPUT_PASSWORD -> {
 
                         Text("Set your card password", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(18.dp))
@@ -76,13 +76,13 @@ fun WriteTagPasswordDialog(
                         }
 
                     }
-                    DialogState.WRITE_TAG -> {
+                    WriteTagDialogState.WRITE_TAG -> {
 
                         Text("Register your card", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(18.dp))
 
                         if(state.isTagDetected){
-                            Text("Data successfully written into NFC card")
+                            Text("NFC card detected")
                             Text(state.message ?: "")
                         }else{
                             Text("Please tap your nfc card to write the data into the card")

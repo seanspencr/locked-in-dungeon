@@ -5,6 +5,12 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
 import android.nfc.NfcAdapter
+import android.nfc.tech.IsoDep
+import android.nfc.tech.MifareClassic
+import android.nfc.tech.MifareUltralight
+import android.nfc.tech.Ndef
+import android.nfc.tech.NdefFormatable
+import android.nfc.tech.NfcA
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 
@@ -24,16 +30,26 @@ class NfcWrapper @Inject constructor(
     }
     val ndefFilter = IntentFilter(NfcAdapter.ACTION_NDEF_DISCOVERED).apply {
         try {
-            addDataType("text/plain")
+            addDataType("*/*")
         } catch (e: IntentFilter.MalformedMimeTypeException) {
             throw RuntimeException("fail", e)
         }
     }
 
+    private val techLists = arrayOf(
+        arrayOf(Ndef::class.java.name),
+    )
+
+
     private val intentFilters = arrayOf(ndefFilter)
 
     fun enable() {
-        nfcAdapter?.enableForegroundDispatch(activity, pendingIntent, intentFilters, null)
+        nfcAdapter?.enableForegroundDispatch(
+            activity,
+            pendingIntent,
+            intentFilters,
+            techLists
+        )
     }
 
     fun disable() {

@@ -28,6 +28,7 @@ import com.example.lockedindungeon.feature.NfcWrapper
 import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
+import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
@@ -41,6 +42,7 @@ class MainActivity(
 
     private val homeViewModel: HomeViewModel by viewModels()
     private val writeTagViewModel: WriteTagViewModel by viewModels()
+    private val nfcUnlockDialogViewmodel: NfcUnlockDialogViewmodel by viewModels()
     private lateinit var navController: NavHostController
     @Inject lateinit var nfcWrapper : NfcWrapper;
 
@@ -94,6 +96,7 @@ class MainActivity(
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
+        Log.d(tag, "New NFC intent received, event : ${intent.action}")
         if (NfcAdapter.ACTION_NDEF_DISCOVERED != intent.action) return
 
         // a card tapped while registering a new one gets written to, no matter the screen
@@ -103,6 +106,8 @@ class MainActivity(
         val isOnSettings = navController.currentDestination
             ?.hasRoute(NavigationRoute.SettingsScreenRoute::class) == true
         if (!isOnSettings) {
+//            klo bukan di settings tapi ada intent masuk, brarti dia di homescreen dan lagi mau toggle blocking
+            nfcUnlockDialogViewmodel.onNdefIntent(intent)
             homeViewModel.onNdefIntent(intent)
         }
     }

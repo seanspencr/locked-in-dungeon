@@ -13,21 +13,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 
 @Composable
-fun NfcDialog(
-    passwordBuffer: String,
-    message: String?,
-    onPasswordChanged: (String) -> Unit,
-    onPasswordSubmit: () -> Unit,
+fun NfcUnlockDialog(
+    viewModel : NfcUnlockDialogViewmodel = viewModel(),
     onDismiss : () -> Unit
 ) {
+
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    var inputPassword by remember { mutableStateOf("") }
     Dialog(
         onDismissRequest = onDismiss,
         DialogProperties(usePlatformDefaultWidth = false)
@@ -52,21 +60,26 @@ fun NfcDialog(
 
                 Spacer(Modifier.height(18.dp))
 
-                message?.let {
+                state.nfcMessage?.let {
                     Text(it, textAlign = TextAlign.Center)
                 }
 
                 Spacer(Modifier.height(24.dp))
 
                 TextField(
-                    value = passwordBuffer,
-                    onValueChange = onPasswordChanged,
+                    value = inputPassword,
+                    onValueChange = { inputPassword = it },
                     label = { Text("Password") }
                 )
 
                 Spacer(Modifier.height(24.dp))
 
-                Button(onPasswordSubmit) {
+                Button({
+                    viewModel.submitPassword(
+                        inputPassword = inputPassword,
+                        onSuccess = onDismiss
+                    )
+                }) {
                     Text("Submit")
                 }
             }

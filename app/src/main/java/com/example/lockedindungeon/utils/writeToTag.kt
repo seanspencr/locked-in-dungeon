@@ -5,9 +5,11 @@ import android.nfc.NdefRecord
 import android.nfc.Tag
 import android.nfc.tech.Ndef
 import android.nfc.tech.NdefFormatable
+import android.util.Log
 import java.io.IOException
 
 fun writeToTag(tag: Tag, text: String): Boolean {
+    val logTag : String = "writeToTag"
     val message = NdefMessage(arrayOf(NdefRecord.createTextRecord("en", text)))
     val ndef = Ndef.get(tag)
 
@@ -18,8 +20,12 @@ fun writeToTag(tag: Tag, text: String): Boolean {
             ndef.writeNdefMessage(message)
             true
         } catch (e: IOException) {
+            Log.e(logTag, "IOException : ${e.message}")
             false
-        } finally {
+        } catch(e : Exception){
+            Log.e(logTag, "Exception : ${e.message}")
+            false
+        }finally {
             runCatching { ndef.close() }
         }
     } else {
@@ -30,6 +36,10 @@ fun writeToTag(tag: Tag, text: String): Boolean {
                 formatable.format(message)
                 true
             } catch (e: IOException) {
+                Log.e(logTag, "IOException : ${e.message}")
+                false
+            } catch(e : Exception){
+                Log.e(logTag, "Exception : ${e.message}")
                 false
             } finally {
                 runCatching { formatable.close() }
