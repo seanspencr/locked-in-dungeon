@@ -1,6 +1,8 @@
 package com.example.lockedindungeon.activities
 
+import android.Manifest
 import android.app.AppOpsManager
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.nfc.NfcAdapter
@@ -9,38 +11,54 @@ import android.os.Process
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.getSystemService
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import com.example.lockedindungeon.components.NavigationParent
 import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
+import com.example.lockedindungeon.components.TitleBar
 import com.example.lockedindungeon.feature.NfcWrapper
 import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
 import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
-import com.example.lockedindungeon.workers.SnoozeWorker
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import java.io.FileOutputStream
-import java.time.Duration
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.minutes
 
 @AndroidEntryPoint
 class MainActivity(
@@ -72,9 +90,16 @@ class MainActivity(
             requestUsageStatsPermission()
         }
 
+
         setContent {
+
             LockedInDungeonTheme {
                 navController = rememberNavController()
+
+                var notificationDialogClosed by remember { mutableStateOf(false) }
+                if(!isNotificationAllowed() && !notificationDialogClosed){
+                    AskNotificationPermissionDialog({notificationDialogClosed = true}, {notificationDialogClosed = true})
+                }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -156,6 +181,11 @@ class MainActivity(
         return false
     }
 
+
+    fun isNotificationAllowed() : Boolean{
+        return getSystemService<NotificationManager>()?.areNotificationsEnabled() ?: false
+    }
+
     fun hasUsageStatsPermission(): Boolean {
         val appOps = getSystemService(APP_OPS_SERVICE) as AppOpsManager
         val mode = appOps.unsafeCheckOpNoThrow(
@@ -218,5 +248,56 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 fun GreetingPreview() {
     LockedInDungeonTheme {
         Greeting("Android")
+    }
+}
+
+
+@Composable
+fun AskNotificationPermissionDialog(
+    onGranted : () -> Unit,
+    onDenied : () -> Unit
+){
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) onGranted.invoke() else onDenied.invoke()
+    }
+
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(16.dp),
+            shape = RoundedCornerShape(32.dp),
+        ) {
+            Column(
+                Modifier.padding(24.dp),
+                Arrangement.Center,
+                Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Turn on notifications",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(Modifier.height(18.dp))
+
+                Text(
+                    "LockedInDungeon needs notifications to tell you when a snooze is over and blocking is turned back on",
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                Button(onClick = {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }) {
+                    Text("Enable Notifications")
+                }
+            }
+        }
     }
 }

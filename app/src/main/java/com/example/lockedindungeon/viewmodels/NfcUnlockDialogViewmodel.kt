@@ -112,7 +112,7 @@ class NfcUnlockDialogViewmodel @Inject constructor(
 
         Log.d(tag, "Scheduling snooze : $durationMinute")
         val request : OneTimeWorkRequest = OneTimeWorkRequestBuilder<SnoozeWorker>()
-            .setInitialDelay(Duration.ofMinutes(durationMinute.toLong()))
+            .setInitialDelay(Duration.ofSeconds(durationMinute.toLong()))
             .build()
 
         // REPLACE: snoozing again must not leave the older timer armed, it would re-enable
