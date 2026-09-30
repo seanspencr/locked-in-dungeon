@@ -82,6 +82,20 @@
         </provider>
 
 
+        <!-- Keep androidx.startup (emoji2 / profileinstaller / ProcessLifecycle) but drop the default
+             WorkManager initializer, so LockedInDungeon#workManagerConfiguration (HiltWorkerFactory)
+             is used via on-demand initialization instead of the default Configuration. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
     </application>
 
 </manifest>

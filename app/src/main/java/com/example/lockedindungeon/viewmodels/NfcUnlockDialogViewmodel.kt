@@ -109,15 +109,17 @@ class NfcUnlockDialogViewmodel @Inject constructor(
     }
 
     public fun scheduleSnooze(durationMinute : Int = 5){
+
+        Log.d(tag, "Scheduling snooze : $durationMinute")
         val request : OneTimeWorkRequest = OneTimeWorkRequestBuilder<SnoozeWorker>()
             .setInitialDelay(Duration.ofMinutes(durationMinute.toLong()))
             .build()
 
         // REPLACE: snoozing again must not leave the older timer armed, it would re-enable
         // blocking before the interval the user just picked is over
-        WorkManager.getInstance(appContext).enqueueUniqueWork(
-            SNOOZE_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
+        WorkManager.getInstance(appContext).enqueue(
+//            SNOOZE_WORK_NAME,
+//            ExistingWorkPolicy.REPLACE,
             request
         )
     }

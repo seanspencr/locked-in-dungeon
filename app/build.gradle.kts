@@ -116,4 +116,6 @@ dependencies {
 
     // Source: https://mvnrepository.com/artifact/androidx.hilt/hilt-work
     implementation(libs.androidx.hilt.work)
+    // generates the WorkerAssistedFactory bindings consumed by HiltWorkerFactory (@HiltWorker)
+    ksp(libs.androidx.hilt.compiler)
 }
