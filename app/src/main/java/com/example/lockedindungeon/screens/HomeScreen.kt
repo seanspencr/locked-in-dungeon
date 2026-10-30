@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
  import com.dotlottie.dlplayer.OpenUrlPolicy
  import com.lottiefiles.dotlottie.core.compose.runtime.DotLottieController
  import com.example.lockedindungeon.components.NfcUnlockDialog
+import com.example.lockedindungeon.components.NotificationRequestDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
 import com.example.lockedindungeon.viewmodels.HomeViewModel
  import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
@@ -37,7 +38,9 @@ fun HomeScreen(
     modifier : Modifier = Modifier,
     viewModel : HomeViewModel = hiltViewModel(),
     writeTagViewModel : WriteTagViewModel = hiltViewModel(),
-    nfcUnlockDialogViewmodel: NfcUnlockDialogViewmodel = hiltViewModel()
+    nfcUnlockDialogViewmodel: NfcUnlockDialogViewmodel = hiltViewModel(),
+    isNotificationEnabled : Boolean = true,
+    onRequestNotificationPermission : () -> Unit = {}
     )
 {
     val controller = remember { DotLottieController() }
@@ -130,6 +133,16 @@ fun HomeScreen(
                 onDismiss = { isWriteTagDialogOpen = false }
             )
         }
+
+        if(!isNotificationEnabled && !state.isNotificationDialogDismissed){
+            NotificationRequestDialog(
+                onDismiss = { viewModel.dismissNotificationDialog() },
+                onAccept = { accepted ->
+                    viewModel.dismissNotificationDialog()
+                    if (accepted) onRequestNotificationPermission()
+                }
+            )
+        }
     }
 
 }
@@ -138,5 +151,4 @@ fun HomeScreen(
 @Composable
 fun HomePreview(){
     HomeScreen()
-
 }

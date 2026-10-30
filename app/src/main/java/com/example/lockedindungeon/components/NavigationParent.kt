@@ -37,7 +37,12 @@ import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 import kotlinx.serialization.Serializable
 
 @Composable
-fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifier) {
+fun NavigationParent(
+    controller: NavHostController ,
+    modifier: Modifier = Modifier,
+    isNotificationEnabled : Boolean = true,
+    onRequestNotificationPermission : () -> Unit = {}
+) {
     val startRoute = NavigationRoute.HomeScreenRoute
 
     val homeViewModel : HomeViewModel = hiltViewModel()
@@ -53,7 +58,9 @@ fun NavigationParent(controller: NavHostController , modifier: Modifier = Modifi
             HomeScreen(
                 viewModel = homeViewModel,
                 writeTagViewModel = writeTagViewModel,
-                nfcUnlockDialogViewmodel = nfcUnlockDialogViewmodel
+                nfcUnlockDialogViewmodel = nfcUnlockDialogViewmodel,
+                isNotificationEnabled = isNotificationEnabled,
+                onRequestNotificationPermission = onRequestNotificationPermission
             )
         }
         composable<NavigationRoute.BlockingListScreenRoute> {

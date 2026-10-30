@@ -3,6 +3,7 @@ agp = "9.2.1"
 coreKtx = "1.15.0"
 datastorePreferences = "1.2.1"
 dotlottieAndroidVersion = "0.15.0"
+firebaseBom = "35.1.0"
 hiltAndroid = "2.60.1"
 hiltCompilerVersion = "2.60.1"
 hiltAndroidxCompiler = "1.4.0"
@@ -49,6 +50,8 @@ androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref =
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

@@ -1,9 +1,11 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.hiltAndroid)
+    alias(libs.plugins.ksp)
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.gms.google-services")
+
 }
 
 android {
@@ -81,16 +83,12 @@ dependencies {
     // optional - ProcessLifecycleOwner provides a lifecycle for the whole application process
     implementation(libs.androidx.lifecycle.process)
 
+    implementation(platform(libs.firebase.bom))
+//    ini buat firebase messaageing
+    implementation(libs.firebase.messaging)
 
 
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
-    implementation(libs.hilt.android)
-    implementation(libs.hilt.navigation.compose)
-    ksp(libs.hilt.android.compiler)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.lottiefiles.dotlottie.android)
+
 
 
     // Jetpack Compose integration
@@ -116,6 +114,15 @@ dependencies {
 
     // Source: https://mvnrepository.com/artifact/androidx.hilt/hilt-work
     implementation(libs.androidx.hilt.work)
+
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.android.compiler)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.lottiefiles.dotlottie.android)
     // generates the WorkerAssistedFactory bindings consumed by HiltWorkerFactory (@HiltWorker)
     ksp(libs.androidx.hilt.compiler)
 }

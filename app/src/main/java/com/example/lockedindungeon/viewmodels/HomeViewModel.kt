@@ -17,6 +17,7 @@ data class HomeState (
     public val isBlockActive : Boolean = false,
     public val currentDayStreak : Int = 0,
     public val isNfcDialogOpen : Boolean = false,
+    public val isNotificationDialogDismissed : Boolean = false
 
     // NfcDialog: read the card and toggle blocking
 
@@ -79,4 +80,14 @@ class HomeViewModel @Inject constructor(
             isNfcDialogOpen = false
         )
     }
+
+    // -------------------------------------------------------- NotificationDialog
+
+    /** Hides the "turn on notifications" prompt after the user answered it. */
+    public fun dismissNotificationDialog(){
+        _state.value = _state.value.copy(
+            isNotificationDialogDismissed = true
+        )
+    }
+
 }
