@@ -1,7 +1,5 @@
 package com.example.lockedindungeon.services
 
-import android.R
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
@@ -17,7 +15,9 @@ import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
+import com.example.lockedindungeon.R
 import com.example.lockedindungeon.activities.MainActivity
+import com.example.lockedindungeon.utils.AppNotificationChannels
 import com.example.lockedindungeon.workers.MyWorker
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -200,11 +200,11 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
             PendingIntent.FLAG_IMMUTABLE,
         )
 
-//        TODO : ini bnerin reference resourcenyaa kocak
-        val channelId = getString(R.string.autofill)
+        // channel is registered once in LockedInDungeon.onCreate, so only its id is needed here
+        val channelId = AppNotificationChannels.friendPokesId(this)
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_dialog_email)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle("FCM message")
             .setContentText(messageBody)
             .setAutoCancel(true)
@@ -212,14 +212,6 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        // Since android Oreo notification channel is needed.
-        val channel = NotificationChannel(
-            channelId,
-            "Channel human readable title",
-            NotificationManager.IMPORTANCE_DEFAULT,
-        )
-        notificationManager.createNotificationChannel(channel)
 
         val notificationId = 1
         notificationManager.notify(notificationId, notificationBuilder.build())
