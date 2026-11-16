@@ -23,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +33,9 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,15 +47,19 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.components.TitleBar
 import com.example.lockedindungeon.data.model.SearchedUser
-import com.example.lockedindungeon.dto.Follow
 import com.example.lockedindungeon.viewmodels.FriendScreenTabState
 import com.example.lockedindungeon.viewmodels.FriendViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendScreen(
     viewModel: FriendViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.refresh()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -86,40 +93,39 @@ fun FriendScreen(
                 }
             }
 
-            val isEmpty = when (state.tabState) {
-                FriendScreenTabState.FRIEND -> state.friendList.isEmpty()
-                FriendScreenTabState.FOLLOWER -> state.followerList.isEmpty()
-                FriendScreenTabState.FOLLOWING -> state.followingUserList.isEmpty()
+            val currentUsers = when (state.tabState) {
+                FriendScreenTabState.FRIEND -> state.friendList
+                FriendScreenTabState.FOLLOWER -> state.followerList
+                FriendScreenTabState.FOLLOWING -> state.followingUserList
             }
 
-            if (isEmpty) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No ${state.tabState.name.lowercase()}s found",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
+            PullToRefreshBox(
+                isRefreshing = state.isRefreshing,
+                onRefresh = { viewModel.refresh() },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            ) {
                 LazyColumn(
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    when (state.tabState) {
-                        FriendScreenTabState.FRIEND -> items(state.friendList) { follow ->
-                            FriendCard(follow = follow)
-                            Spacer(modifier = Modifier.height(8.dp))
+                    if (currentUsers.isEmpty()) {
+                        // an item instead of a plain Box, so dragging down still works when empty
+                        item {
+                            Box(
+                                modifier = Modifier.fillParentMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No ${state.tabState.name.lowercase()}s found",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                        FriendScreenTabState.FOLLOWER -> items(state.followerList) { follow ->
-                            FriendCard(follow = follow)
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        FriendScreenTabState.FOLLOWING -> items(state.followingUserList) { user ->
+                    } else {
+                        items(currentUsers) { user ->
                             UserCard(
                                 user = user,
                                 onFollow = { viewModel.follow(user) },
@@ -291,36 +297,6 @@ fun UserCard(
             Button(onClick = onFollow) {
                 Text("Follow")
             }
-        }
-    }
-}
-
-@Composable
-fun FriendCard(follow: Follow) {
-    val username = follow.follower?.username ?: follow.target?.username ?: "Unknown User"
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "User Icon",
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = username,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
 }

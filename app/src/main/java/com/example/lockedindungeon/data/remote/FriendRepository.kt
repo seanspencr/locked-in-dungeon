@@ -3,7 +3,6 @@ package com.example.lockedindungeon.data.remote
 import com.example.lockedindungeon.api.FollowControllerApi
 import com.example.lockedindungeon.data.model.ApiResult
 import com.example.lockedindungeon.dto.AppUsageBragRequest
-import com.example.lockedindungeon.dto.Follow
 import com.example.lockedindungeon.dto.FollowDto
 import com.example.lockedindungeon.dto.FollowUserRequest
 import com.example.lockedindungeon.dto.FriendListResponse
@@ -23,6 +22,12 @@ class FriendRepository @Inject constructor(
     public fun getFriends(page : Int?, size : Int?): ApiResult<FriendListResponse> {
 
         val response = friendApi.getFriendList(page, size).execute()
+        return ApiResult.mapFromResponse(response)
+    }
+
+
+    public fun getFollowers(page : Int?, size : Int?): ApiResult<FriendListResponse> {
+        val response = friendApi.getFollowersOnly(page, size).execute()
         return ApiResult.mapFromResponse(response)
     }
 

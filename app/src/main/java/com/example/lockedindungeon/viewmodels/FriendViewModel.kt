@@ -6,12 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.model.ApiResult
 import com.example.lockedindungeon.data.model.SearchedUser
 import com.example.lockedindungeon.data.remote.FriendRepository
-import com.example.lockedindungeon.dto.Follow
 import com.example.lockedindungeon.dto.FollowUserRequest
 import com.example.lockedindungeon.dto.FriendListResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,11 +30,13 @@ data class FriendScreenState(
     val isSearchDialogOpen : Boolean = false,
     val searchResultUsers : List<SearchedUser> = listOf(),
     val isSearching : Boolean = false,
+    /** True while the pull to refresh gesture is fetching the three lists. */
+    val isRefreshing : Boolean = false,
 
-    val followerList : List<Follow> = listOf(),
+    val followerList : List<SearchedUser> = listOf(),
     /** Users the client currently treats as followed, updated optimistically on follow/unfollow. */
     val followingUserList : List<SearchedUser> = listOf(),
-    val friendList : List<Follow> = listOf()
+    val friendList : List<SearchedUser> = listOf()
 )
 
 @HiltViewModel
@@ -45,17 +47,51 @@ class FriendViewModel @Inject constructor(
     companion object {
         private const val TAG = "FriendViewModel"
 
-        /** The following endpoint is paginated, one page is enough to resolve the follow state. */
-        private const val FOLLOWING_PAGE_SIZE = 100
+        /** The endpoints are paginated, one page is enough for the list screens. */
+        private const val PAGE_SIZE = 100
     }
 
     private val _state : MutableStateFlow<FriendScreenState> = MutableStateFlow(FriendScreenState())
     val state : StateFlow<FriendScreenState> = _state
 
     private var searchJob: Job? = null
+    private var refreshJob: Job? = null
 
     fun changeTab(tabState: FriendScreenTabState) {
         _state.value = _state.value.copy(tabState = tabState)
+    }
+
+    /**
+     * Fetches friends, followers and following in parallel. Called from the screen's LaunchedEffect
+     * on first composition and from the pull to refresh gesture.
+     */
+    fun refresh() {
+        refreshJob?.cancel()
+        _state.value = _state.value.copy(isRefreshing = true)
+
+        refreshJob = viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val followingDeferred = async { friendRepository.getFollowing(page = 0, size = PAGE_SIZE) }
+                val followerDeferred = async { friendRepository.getFollowers(page = 0, size = PAGE_SIZE) }
+                val friendDeferred = async { friendRepository.getFriends(page = 0, size = PAGE_SIZE) }
+
+                val following = followingDeferred.await().usersOf(isFollowed = true)
+                val followedIds = following.mapNotNull { it.id }.toSet()
+                val followers = followerDeferred.await().usersOf().withFollowState(followedIds)
+                val friends = friendDeferred.await().usersOf().withFollowState(followedIds)
+
+                _state.value = _state.value.copy(
+                    followingUserList = following,
+                    followerList = followers,
+                    friendList = friends,
+                    searchResultUsers = _state.value.searchResultUsers.withFollowState(followedIds),
+                    isRefreshing = false
+                )
+            }.onFailure { error ->
+                Log.d(TAG, "refresh failed: ${error.message}")
+                _state.value = _state.value.copy(isRefreshing = false)
+            }
+        }
     }
 
     fun openSearchDialog() {
@@ -66,7 +102,7 @@ class FriendViewModel @Inject constructor(
             isSearching = false
         )
         // refreshes the follow state, so rows already followed show Unfollow right away
-        refreshFollowingUsers()
+        refresh()
     }
 
     fun dismissSearchDialog() {
@@ -99,12 +135,12 @@ class FriendViewModel @Inject constructor(
                         _state.value = _state.value.copy(searchResultUsers = emptyList(), isSearching = false)
                     }
                     is ApiResult.Success<FriendListResponse?> -> {
-                        val following = _state.value.followingUserList
+                        val followedIds = _state.value.followingUserList.mapNotNull { it.id }.toSet()
                         val users = result.data?.paginatedUser.orEmpty().map { user ->
                             SearchedUser(
                                 id = user.id,
                                 username = user.username.orEmpty(),
-                                isFollowed = following.any { it.id == user.id }
+                                isFollowed = user.id != null && user.id in followedIds
                             )
                         }
                         _state.value = _state.value.copy(searchResultUsers = users, isSearching = false)
@@ -127,7 +163,7 @@ class FriendViewModel @Inject constructor(
         sendFollowChange(user, isFollowed = false)
     }
 
-    /** Optimistic: the search row and [FriendScreenState.followingUserList] change before the call. */
+    /** Optimistic: the lists change before the request even leaves the device. */
     private fun applyFollow(user : SearchedUser, isFollowed : Boolean) {
         val userId = user.id ?: return
 
@@ -136,6 +172,12 @@ class FriendViewModel @Inject constructor(
                 _state.value.followingUserList.filterNot { it.id == userId } + user.copy(isFollowed = true)
             } else {
                 _state.value.followingUserList.filterNot { it.id == userId }
+            },
+            followerList = _state.value.followerList.map {
+                if (it.id == userId) it.copy(isFollowed = isFollowed) else it
+            },
+            friendList = _state.value.friendList.map {
+                if (it.id == userId) it.copy(isFollowed = isFollowed) else it
             },
             searchResultUsers = _state.value.searchResultUsers.map {
                 if (it.id == userId) it.copy(isFollowed = isFollowed) else it
@@ -161,26 +203,22 @@ class FriendViewModel @Inject constructor(
         }
     }
 
-    private fun refreshFollowingUsers() {
-        viewModelScope.launch(Dispatchers.IO) {
-            when (val result = friendRepository.getFollowing(page = 0, size = FOLLOWING_PAGE_SIZE)) {
-                is ApiResult.Success<FriendListResponse> -> {
-                    val following = result.data.paginatedUser.orEmpty().map { user ->
-                        SearchedUser(
-                            id = user.id,
-                            username = user.username.orEmpty(),
-                            isFollowed = true
-                        )
-                    }
-                    _state.value = _state.value.copy(
-                        followingUserList = following,
-                        searchResultUsers = _state.value.searchResultUsers.map { row ->
-                            row.copy(isFollowed = following.any { it.id == row.id })
-                        }
-                    )
-                }
-                is ApiResult.Error -> Log.d(TAG, "getFollowing error: ${result.message}")
+    /** Maps a paginated user response to UI rows, logging instead of crashing on errors. */
+    private fun ApiResult<FriendListResponse>.usersOf(isFollowed : Boolean = false) : List<SearchedUser> =
+        when (this) {
+            is ApiResult.Success<FriendListResponse> -> data.paginatedUser.orEmpty().map { user ->
+                SearchedUser(
+                    id = user.id,
+                    username = user.username.orEmpty(),
+                    isFollowed = isFollowed
+                )
+            }
+            is ApiResult.Error -> {
+                Log.d(TAG, "fetching users failed: $message")
+                emptyList()
             }
         }
-    }
+
+    private fun List<SearchedUser>.withFollowState(followedIds : Set<Long>) : List<SearchedUser> =
+        map { user -> user.copy(isFollowed = user.id != null && user.id in followedIds) }
 }
