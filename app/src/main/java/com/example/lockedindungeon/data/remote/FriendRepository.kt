@@ -57,7 +57,8 @@ class FriendRepository @Inject constructor(
 
     public fun unfollowUser(req  : FollowUserRequest): ApiResult<MessageResponse?> {
         val response = friendApi.unfollowUser(req).execute()
-        return ApiResult.mapFromResponse(response)
+        // unfollow may answer with an empty body, that is still a success
+        return ApiResult.mapFromResponseAllowingEmptyBody(response)
     }
 
     public fun bragStats(req : AppUsageBragRequest): ApiResult<MessageResponse?> {

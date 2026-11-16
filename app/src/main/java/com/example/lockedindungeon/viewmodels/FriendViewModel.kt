@@ -57,6 +57,12 @@ class FriendViewModel @Inject constructor(
     private var searchJob: Job? = null
     private var refreshJob: Job? = null
 
+    /**
+     * Bumped on every optimistic follow/unfollow, rollbacks included. A refresh that started before
+     * a mutation carries the older version, so it may not write its stale snapshot back over it.
+     */
+    private var mutationVersion : Int = 0
+
     fun changeTab(tabState: FriendScreenTabState) {
         _state.value = _state.value.copy(tabState = tabState)
     }
@@ -68,6 +74,7 @@ class FriendViewModel @Inject constructor(
     fun refresh() {
         refreshJob?.cancel()
         _state.value = _state.value.copy(isRefreshing = true)
+        val version = mutationVersion
 
         refreshJob = viewModelScope.launch(Dispatchers.IO) {
             runCatching {
@@ -80,17 +87,20 @@ class FriendViewModel @Inject constructor(
                 val followers = followerDeferred.await().usersOf().withFollowState(followedIds)
                 val friends = friendDeferred.await().usersOf().withFollowState(followedIds)
 
-                _state.value = _state.value.copy(
-                    followingUserList = following,
-                    followerList = followers,
-                    friendList = friends,
-                    searchResultUsers = _state.value.searchResultUsers.withFollowState(followedIds),
-                    isRefreshing = false
-                )
+                if (version == mutationVersion) {
+                    _state.value = _state.value.copy(
+                        followingUserList = following,
+                        followerList = followers,
+                        friendList = friends,
+                        searchResultUsers = _state.value.searchResultUsers.withFollowState(followedIds)
+                    )
+                } else {
+                    Log.d(TAG, "refresh result dropped, a follow/unfollow happened while it was running")
+                }
             }.onFailure { error ->
                 Log.d(TAG, "refresh failed: ${error.message}")
-                _state.value = _state.value.copy(isRefreshing = false)
             }
+            _state.value = _state.value.copy(isRefreshing = false)
         }
     }
 
@@ -166,6 +176,9 @@ class FriendViewModel @Inject constructor(
     /** Optimistic: the lists change before the request even leaves the device. */
     private fun applyFollow(user : SearchedUser, isFollowed : Boolean) {
         val userId = user.id ?: return
+
+        // any refresh that is already in flight would restore the state from before this change
+        mutationVersion++
 
         _state.value = _state.value.copy(
             followingUserList = if (isFollowed) {
