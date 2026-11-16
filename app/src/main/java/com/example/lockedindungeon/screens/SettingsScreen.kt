@@ -80,6 +80,21 @@ fun SettingsScreen(
             ) {
                 Text("Reset / Register new card")
             }
+
+
+
+
+            Button(
+                onClick = {
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp)
+                ,
+
+            ) {
+                Text("Sign in")
+            }
         }
 
         if (isWriteTagDialogOpen) {

@@ -26,15 +26,23 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.screens.BlockingConfigurationScreen
+import com.example.lockedindungeon.screens.LoginScreen
 import com.example.lockedindungeon.screens.SettingsScreen
+import com.example.lockedindungeon.screens.SignupScreen
 import com.example.lockedindungeon.screens.UsageScreen
 import com.example.lockedindungeon.viewmodels.BlockingConfigurationViewmodel
 import com.example.lockedindungeon.viewmodels.BlockingListViewModel
+import com.example.lockedindungeon.viewmodels.LoginViewmodel
 import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 import com.example.lockedindungeon.viewmodels.SettingsViewmodel
+import com.example.lockedindungeon.viewmodels.SignupViewmodel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 import kotlinx.serialization.Serializable
+
+import com.example.lockedindungeon.screens.FriendScreen
+import com.example.lockedindungeon.viewmodels.FriendViewModel
+import androidx.compose.material.icons.filled.People
 
 @Composable
 fun NavigationParent(
@@ -46,10 +54,13 @@ fun NavigationParent(
     val startRoute = NavigationRoute.HomeScreenRoute
 
     val homeViewModel : HomeViewModel = hiltViewModel()
+    val friendViewModel : FriendViewModel = hiltViewModel()
     val usageViewModel : UsageViewModel = hiltViewModel()
     val blockingConfigurationViewmodel : BlockingConfigurationViewmodel = hiltViewModel()
     val blockingListViewmodel : BlockingListViewModel = hiltViewModel()
     val settingsViewmodel : SettingsViewmodel = hiltViewModel()
+    val signupViewmodel : SignupViewmodel = hiltViewModel()
+    val loginViewmodel : LoginViewmodel = hiltViewModel()
     // shared by home and settings, so MainActivity can hand a tapped card to either
     val writeTagViewModel : WriteTagViewModel = hiltViewModel()
     val nfcUnlockDialogViewmodel : NfcUnlockDialogViewmodel = hiltViewModel()
@@ -60,8 +71,14 @@ fun NavigationParent(
                 writeTagViewModel = writeTagViewModel,
                 nfcUnlockDialogViewmodel = nfcUnlockDialogViewmodel,
                 isNotificationEnabled = isNotificationEnabled,
-                onRequestNotificationPermission = onRequestNotificationPermission
+                onRequestNotificationPermission = onRequestNotificationPermission,
+                onNavigateToLogin = {
+                    controller.navigate(NavigationRoute.LoginRoute) { launchSingleTop = true }
+                }
             )
+        }
+        composable<NavigationRoute.FriendScreenRoute> {
+            FriendScreen(viewModel = friendViewModel)
         }
         composable<NavigationRoute.BlockingListScreenRoute> {
             BlockingListScreen(viewModel = blockingListViewmodel, navigateToBlockingConfigurationScreen = {packageName, type -> controller.navigate(
@@ -95,6 +112,34 @@ fun NavigationParent(
                     writeTagViewModel = writeTagViewModel
                 )
         }
+
+        composable<NavigationRoute.SignUpRoute> {
+            SignupScreen(
+                viewmodel = signupViewmodel,
+                onNavigateToLogin = { controller.popBackStack() },
+                onSignedUp = {
+                    // account created, drop the user on the login form
+                    if (!controller.popBackStack()) {
+                        controller.navigate(NavigationRoute.LoginRoute) { launchSingleTop = true }
+                    }
+                }
+            )
+        }
+
+        composable<NavigationRoute.LoginRoute> {
+            LoginScreen(
+                viewmodel = loginViewmodel,
+                onNavigateToSignup = {
+                    controller.navigate(NavigationRoute.SignUpRoute) { launchSingleTop = true }
+                },
+                onLoggedIn = {
+                    if (!controller.popBackStack()) {
+                        controller.navigate(NavigationRoute.HomeScreenRoute) { launchSingleTop = true }
+                    }
+                }
+            )
+        }
+
     }
 }
 
@@ -123,6 +168,7 @@ enum class NavigationBarRouteObject(
     val route : NavigationRoute
 ) {
     HomeScreenRouteObject(Icons.Default.Home, "Home", NavigationRoute.HomeScreenRoute),
+    FriendScreenRouteObject(Icons.Default.People, "Friends", NavigationRoute.FriendScreenRoute),
     BlockingListScreenRouteObject(Icons.Default.Menu, "Blocked", NavigationRoute.BlockingListScreenRoute),
     UsageScreenRouteObject(Icons.Default.BarChart, "Usage", NavigationRoute.UsageScreenRoute),
     SettingsScreenRouteObject(Icons.Default.Settings, "Settings", NavigationRoute.SettingsScreenRoute)
@@ -130,8 +176,15 @@ enum class NavigationBarRouteObject(
 
 @Serializable
 sealed interface NavigationRoute {
+
+    @Serializable
+    object SignUpRoute : NavigationRoute
+    @Serializable
+    object LoginRoute : NavigationRoute
     @Serializable
     object HomeScreenRoute : NavigationRoute
+    @Serializable
+    object FriendScreenRoute : NavigationRoute
     @Serializable
     object BlockingListScreenRoute : NavigationRoute
     @Serializable

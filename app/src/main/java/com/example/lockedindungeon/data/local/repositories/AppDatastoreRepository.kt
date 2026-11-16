@@ -42,6 +42,7 @@ class AppDatastoreRepository @Inject constructor(
     private val IS_ACTIVE_KEY = booleanPreferencesKey("is_active")
     private val START_TIME_KEY = longPreferencesKey("start_time")
     private val APP_SETTINGS_KEY = stringPreferencesKey("app_settings")
+    private val REFRESH_TOKEN_KEY = stringPreferencesKey("refreshToken")
 
     val isActive: Flow<Boolean> = appContext.dataStore.data
         .map { prefs -> prefs[IS_ACTIVE_KEY] ?: false }
@@ -86,5 +87,12 @@ class AppDatastoreRepository @Inject constructor(
         }
     }
 
+    suspend fun setRefreshToken(token: String?){
+        appContext.dataStore.edit { it -> it[REFRESH_TOKEN_KEY] = token!! }
+    }
+
+    val refreshToken : Flow<String?> = appContext.dataStore.data.map {
+        it -> it[REFRESH_TOKEN_KEY]
+    }
 
 }

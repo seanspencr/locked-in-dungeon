@@ -27,6 +27,7 @@ data class BlockingConfigurationScreenState(
     val minute: Int = 0,
     val endHour: Int = 0,
     val endMinute: Int = 0,
+    val isAllDay: Boolean = false,
     val isSaving: Boolean = false
 )
 
@@ -51,7 +52,10 @@ class BlockingConfigurationViewmodel @Inject constructor(
                     hour = if (existing.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) / 60 else (existing?.startHour ?: 0),
                     minute = if (existing.blockingType == BlockingType.TIMER) (existing.timerDurationMinute ?: 0) % 60 else (existing?.startMinute ?: 0),
                     endHour = existing.endHour ?: 0,
-                    endMinute = existing.endMinute ?: 0
+                    endMinute = existing.endMinute ?: 0,
+                    isAllDay = existing.blockingType != BlockingType.TIMER &&
+                        existing.startHour == 0 && existing.startMinute == 0 &&
+                        existing.endHour == 23 && existing.endMinute == 59
                 )
             }else{
                 _state.value = _state.value.copy(
@@ -86,6 +90,21 @@ class BlockingConfigurationViewmodel @Inject constructor(
 
     fun onEndMinuteChange(minute: Int) {
         _state.value = _state.value.copy(endMinute = minute)
+    }
+
+    fun onAllDayChange(allDay: Boolean) {
+        _state.value = if (allDay) {
+            // 00:00 - 23:59 is the range the picker treats as a full circle
+            _state.value.copy(
+                isAllDay = true,
+                hour = 0,
+                minute = 0,
+                endHour = 23,
+                endMinute = 59
+            )
+        } else {
+            _state.value.copy(isAllDay = false)
+        }
     }
 
     fun submit(onComplete: () -> Unit) {

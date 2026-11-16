@@ -9,6 +9,7 @@ package com.example.lockedindungeon.screens
  import androidx.compose.material3.Button
  import androidx.compose.material3.MaterialTheme
  import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
  import androidx.compose.runtime.remember
@@ -28,7 +29,8 @@ import androidx.compose.ui.Alignment
  import com.example.lockedindungeon.components.NfcUnlockDialog
 import com.example.lockedindungeon.components.NotificationRequestDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
-import com.example.lockedindungeon.viewmodels.HomeViewModel
+ import com.example.lockedindungeon.utils.IdentityManager
+ import com.example.lockedindungeon.viewmodels.HomeViewModel
  import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
  import com.example.lockedindungeon.viewmodels.WriteTagViewModel
  import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
@@ -40,7 +42,8 @@ fun HomeScreen(
     writeTagViewModel : WriteTagViewModel = hiltViewModel(),
     nfcUnlockDialogViewmodel: NfcUnlockDialogViewmodel = hiltViewModel(),
     isNotificationEnabled : Boolean = true,
-    onRequestNotificationPermission : () -> Unit = {}
+    onRequestNotificationPermission : () -> Unit = {},
+    onNavigateToLogin : () -> Unit = {}
     )
 {
     val controller = remember { DotLottieController() }
@@ -80,6 +83,10 @@ fun HomeScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        if(!IdentityManager.username.isNullOrEmpty()){
+            Text(text = "Hello ${IdentityManager.username}")
+        }
+
         Text(text = "${state.currentDayStreak}", modifier = modifier, style = MaterialTheme.typography.displayMedium, textAlign = TextAlign.Center)
         Text(text = "Day Streak", modifier = modifier, textAlign = TextAlign.Center, style = MaterialTheme.typography.headlineSmall)
 
@@ -110,6 +117,10 @@ fun HomeScreen(
             isWriteTagDialogOpen = true
         }) {
             Text(text = "Reset / Register new card")
+        }
+
+        TextButton(onClick = onNavigateToLogin) {
+            Text(text = "Sign in")
         }
 
         if(state.isNfcDialogOpen){

@@ -27,7 +27,7 @@ class LockedInDungeon : Application(), Configuration.Provider {
      * Token/FIS callbacks land here instead of the main thread, so a busy UI thread cannot make a
      * completed task look like a callback that never fired.
      */
-    private val tokenExecutor : Executor = Executors.newSingleThreadExecutor()
+
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -42,15 +42,11 @@ class LockedInDungeon : Application(), Configuration.Provider {
 
         // Registers this installation with FCM. The result is not the id, the id arrives in
         // FirebaseMessagingService.onRegistered(installationId).
-        Firebase.messaging.register().addOnCompleteListener(tokenExecutor) { task ->
-            if (task.isSuccessful) {
-                Log.d(TAG, "Firebase installation registered")
-            } else {
-                Log.e(TAG, "Firebase installation registration failed", task.exception)
-            }
-        }
 
-        logInstallationId()
+
+
+
+//        logInstallationId()
     }
 
     /**
@@ -62,13 +58,13 @@ class LockedInDungeon : Application(), Configuration.Provider {
      * instance, and it is the same value handed to
      * [com.example.lockedindungeon.services.FirebaseMessagingServiceImpl.onRegistered].
      */
-    private fun logInstallationId() {
-        FirebaseInstallations.getInstance().id.addOnCompleteListener(tokenExecutor) { task ->
-            if (task.isSuccessful) {
-                Log.d(TAG, "Firebase installation id: ${task.result}")
-            } else {
-                Log.e(TAG, "Firebase installation id failed", task.exception)
-            }
-        }
-    }
+//    private fun logInstallationId() {
+//        FirebaseInstallations.getInstance().id.addOnCompleteListener(tokenExecutor) { task ->
+//            if (task.isSuccessful) {
+//                Log.d(TAG, "Firebase installation id: ${task.result}")
+//            } else {
+//                Log.e(TAG, "Firebase installation id failed", task.exception)
+//            }
+//        }
+//    }
 }

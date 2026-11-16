@@ -31,6 +31,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -169,13 +170,16 @@ fun BlockingConfigurationScreen(
                     BlacklistInput(
                         state = state,
                         onStartTimeChange = { h, m ->
+                            viewModel.onAllDayChange(false)
                             viewModel.onHourChange(h)
                             viewModel.onMinuteChange(m)
                         },
                         onEndTimeChange = { h, m ->
+                            viewModel.onAllDayChange(false)
                             viewModel.onEndHourChange(h)
                             viewModel.onEndMinuteChange(m)
                         },
+                        onAllDayChange = { viewModel.onAllDayChange(it) },
                         onSubmit = { viewModel.submit(onNavigateBack) },
                         onDelete = {viewModel.delete(onNavigateBack) }
                     )
@@ -184,13 +188,16 @@ fun BlockingConfigurationScreen(
                     WhitelistInput(
                         state = state,
                         onStartTimeChange = { h, m ->
+                            viewModel.onAllDayChange(false)
                             viewModel.onHourChange(h)
                             viewModel.onMinuteChange(m)
                         },
                         onEndTimeChange = { h, m ->
+                            viewModel.onAllDayChange(false)
                             viewModel.onEndHourChange(h)
                             viewModel.onEndMinuteChange(m)
                         },
+                        onAllDayChange = { viewModel.onAllDayChange(it) },
                         onSubmit = { viewModel.submit(onNavigateBack) },
                         onDelete = {viewModel.delete(onNavigateBack) }
                     )
@@ -276,11 +283,14 @@ fun BlacklistInput(
     state: BlockingConfigurationScreenState,
     onStartTimeChange: (Int, Int) -> Unit,
     onEndTimeChange: (Int, Int) -> Unit,
+    onAllDayChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Blacklist Period", style = MaterialTheme.typography.titleMedium, color = Color.Cyan)
+        Spacer(modifier = Modifier.height(16.dp))
+        AllDayCheckBox(checked = state.isAllDay, onCheckedChange = onAllDayChange)
         Spacer(modifier = Modifier.height(16.dp))
         CircularTimeRangePicker(
             startHour = state.hour,
@@ -340,11 +350,14 @@ fun WhitelistInput(
     state: BlockingConfigurationScreenState,
     onStartTimeChange: (Int, Int) -> Unit,
     onEndTimeChange: (Int, Int) -> Unit,
+    onAllDayChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Whitelist Period", style = MaterialTheme.typography.titleMedium, color = Color.Cyan)
+        Spacer(modifier = Modifier.height(16.dp))
+        AllDayCheckBox(checked = state.isAllDay, onCheckedChange = onAllDayChange)
         Spacer(modifier = Modifier.height(16.dp))
         CircularTimeRangePicker(
             startHour = state.hour,
@@ -563,5 +576,23 @@ fun CircularTimeRangePicker(
                 color = Color.Cyan
             )
         }
+    }
+}
+
+/**
+ * "All day" pins the range to 00:00 - 23:59. Dragging a handle afterwards clears the flag again, so
+ * the checkbox always matches the range the picker shows.
+ */
+@Composable
+private fun AllDayCheckBox(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(checked = checked, onCheckedChange = onCheckedChange)
+        Spacer(Modifier.width(4.dp))
+        Text("All day (00:00 - 23:59)")
     }
 }
