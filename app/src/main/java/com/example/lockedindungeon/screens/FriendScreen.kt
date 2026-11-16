@@ -26,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -35,15 +36,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.components.TitleBar
+import com.example.lockedindungeon.data.model.SearchedUser
 import com.example.lockedindungeon.dto.Follow
-import com.example.lockedindungeon.dto.User
-import com.example.lockedindungeon.dto.UserDto
 import com.example.lockedindungeon.viewmodels.FriendScreenTabState
 import com.example.lockedindungeon.viewmodels.FriendViewModel
 
@@ -135,7 +136,10 @@ fun FriendScreen(
             query = state.querySearch,
             searchResultUsers = state.searchResultUsers,
             isSearching = state.isSearching,
+            pendingFollowUserIds = state.pendingFollowUserIds,
             onQueryChange = { viewModel.onQuerySearchChange(it) },
+            onFollow = { viewModel.follow(it) },
+            onUnfollow = { viewModel.unfollow(it) },
             onDismissRequest = { viewModel.dismissSearchDialog() }
         )
     }
@@ -144,9 +148,12 @@ fun FriendScreen(
 @Composable
 fun SearchUserDialog(
     query: String,
-    searchResultUsers: List<UserDto>,
+    searchResultUsers: List<SearchedUser>,
     isSearching: Boolean,
+    pendingFollowUserIds: Set<Long>,
     onQueryChange: (String) -> Unit,
+    onFollow: (SearchedUser) -> Unit,
+    onUnfollow: (SearchedUser) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     Dialog(
@@ -203,7 +210,12 @@ fun SearchUserDialog(
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(searchResultUsers) { user ->
-                                UserCard(user = user)
+                                UserCard(
+                                    user = user,
+                                    isActionPending = user.id != null && user.id in pendingFollowUserIds,
+                                    onFollow = { onFollow(user) },
+                                    onUnfollow = { onUnfollow(user) }
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
@@ -228,7 +240,12 @@ fun SearchUserDialog(
 }
 
 @Composable
-fun UserCard(user: UserDto) {
+fun UserCard(
+    user: SearchedUser,
+    isActionPending: Boolean,
+    onFollow: () -> Unit,
+    onUnfollow: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -238,6 +255,7 @@ fun UserCard(user: UserDto) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
+            modifier = Modifier.weight(1f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -246,12 +264,22 @@ fun UserCard(user: UserDto) {
                 contentDescription = "User Icon",
                 tint = MaterialTheme.colorScheme.primary
             )
-            user.username?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            Text(
+                text = user.username,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        if (user.isFollowed) {
+            OutlinedButton(onClick = onUnfollow, enabled = !isActionPending) {
+                Text("Unfollow")
+            }
+        } else {
+            Button(onClick = onFollow, enabled = !isActionPending) {
+                Text("Follow")
             }
         }
     }

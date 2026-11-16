@@ -4,6 +4,7 @@ import com.example.lockedindungeon.api.FollowControllerApi
 import com.example.lockedindungeon.data.model.ApiResult
 import com.example.lockedindungeon.dto.AppUsageBragRequest
 import com.example.lockedindungeon.dto.Follow
+import com.example.lockedindungeon.dto.FollowDto
 import com.example.lockedindungeon.dto.FollowUserRequest
 import com.example.lockedindungeon.dto.FriendListResponse
 import com.example.lockedindungeon.dto.MessageResponse
@@ -27,7 +28,8 @@ class FriendRepository @Inject constructor(
 
 
     public fun getFollowing(page : Int?, size : Int?): ApiResult<FriendListResponse> {
-        TODO("backend does not exist yet")
+        val response = friendApi.getFollowingOnly(page, size).execute()
+        return ApiResult.mapFromResponse(response)
     }
 
 
@@ -43,7 +45,7 @@ class FriendRepository @Inject constructor(
     }
 
 
-    public fun followUser(req : FollowUserRequest): ApiResult<Follow> {
+    public fun followUser(req : FollowUserRequest): ApiResult<FollowDto> {
         val response = friendApi.followUser(req).execute()
         return ApiResult.mapFromResponse(response)
     }
