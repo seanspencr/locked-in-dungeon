@@ -86,13 +86,13 @@ fun FriendScreen(
                 }
             }
 
-            val currentList = when (state.tabState) {
-                FriendScreenTabState.FRIEND -> state.friendList
-                FriendScreenTabState.FOLLOWER -> state.followerList
-                FriendScreenTabState.FOLLOWING -> state.followingList
+            val isEmpty = when (state.tabState) {
+                FriendScreenTabState.FRIEND -> state.friendList.isEmpty()
+                FriendScreenTabState.FOLLOWER -> state.followerList.isEmpty()
+                FriendScreenTabState.FOLLOWING -> state.followingUserList.isEmpty()
             }
 
-            if (currentList.isEmpty()) {
+            if (isEmpty) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -110,9 +110,23 @@ fun FriendScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(currentList) { follow ->
-                        FriendCard(follow = follow)
-                        Spacer(modifier = Modifier.height(8.dp))
+                    when (state.tabState) {
+                        FriendScreenTabState.FRIEND -> items(state.friendList) { follow ->
+                            FriendCard(follow = follow)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        FriendScreenTabState.FOLLOWER -> items(state.followerList) { follow ->
+                            FriendCard(follow = follow)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        FriendScreenTabState.FOLLOWING -> items(state.followingUserList) { user ->
+                            UserCard(
+                                user = user,
+                                onFollow = { viewModel.follow(user) },
+                                onUnfollow = { viewModel.unfollow(user) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             }
@@ -136,7 +150,6 @@ fun FriendScreen(
             query = state.querySearch,
             searchResultUsers = state.searchResultUsers,
             isSearching = state.isSearching,
-            pendingFollowUserIds = state.pendingFollowUserIds,
             onQueryChange = { viewModel.onQuerySearchChange(it) },
             onFollow = { viewModel.follow(it) },
             onUnfollow = { viewModel.unfollow(it) },
@@ -150,7 +163,6 @@ fun SearchUserDialog(
     query: String,
     searchResultUsers: List<SearchedUser>,
     isSearching: Boolean,
-    pendingFollowUserIds: Set<Long>,
     onQueryChange: (String) -> Unit,
     onFollow: (SearchedUser) -> Unit,
     onUnfollow: (SearchedUser) -> Unit,
@@ -212,7 +224,6 @@ fun SearchUserDialog(
                             items(searchResultUsers) { user ->
                                 UserCard(
                                     user = user,
-                                    isActionPending = user.id != null && user.id in pendingFollowUserIds,
                                     onFollow = { onFollow(user) },
                                     onUnfollow = { onUnfollow(user) }
                                 )
@@ -242,7 +253,6 @@ fun SearchUserDialog(
 @Composable
 fun UserCard(
     user: SearchedUser,
-    isActionPending: Boolean,
     onFollow: () -> Unit,
     onUnfollow: () -> Unit
 ) {
@@ -274,11 +284,11 @@ fun UserCard(
         }
 
         if (user.isFollowed) {
-            OutlinedButton(onClick = onUnfollow, enabled = !isActionPending) {
+            OutlinedButton(onClick = onUnfollow) {
                 Text("Unfollow")
             }
         } else {
-            Button(onClick = onFollow, enabled = !isActionPending) {
+            Button(onClick = onFollow) {
                 Text("Follow")
             }
         }
