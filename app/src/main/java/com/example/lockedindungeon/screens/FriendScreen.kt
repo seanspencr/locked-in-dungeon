@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.lockedindungeon.components.TitleBar
 import com.example.lockedindungeon.dto.Follow
+import com.example.lockedindungeon.dto.User
+import com.example.lockedindungeon.dto.UserDto
 import com.example.lockedindungeon.viewmodels.FriendScreenTabState
 import com.example.lockedindungeon.viewmodels.FriendViewModel
 
@@ -129,6 +133,8 @@ fun FriendScreen(
     if (state.isSearchDialogOpen) {
         SearchUserDialog(
             query = state.querySearch,
+            searchResultUsers = state.searchResultUsers,
+            isSearching = state.isSearching,
             onQueryChange = { viewModel.onQuerySearchChange(it) },
             onDismissRequest = { viewModel.dismissSearchDialog() }
         )
@@ -138,6 +144,8 @@ fun FriendScreen(
 @Composable
 fun SearchUserDialog(
     query: String,
+    searchResultUsers: List<UserDto>,
+    isSearching: Boolean,
     onQueryChange: (String) -> Unit,
     onDismissRequest: () -> Unit
 ) {
@@ -146,12 +154,14 @@ fun SearchUserDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(0.9f),
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.7f),
             shape = RoundedCornerShape(24.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -171,7 +181,36 @@ fun SearchUserDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isSearching) {
+                        CircularProgressIndicator()
+                    } else if (query.isNotBlank() && searchResultUsers.isEmpty()) {
+                        Text(
+                            text = "No users found",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        LazyColumn(
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(searchResultUsers) { user ->
+                                UserCard(user = user)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
                     onClick = onDismissRequest,
@@ -183,6 +222,36 @@ fun SearchUserDialog(
                 ) {
                     Text("Close")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun UserCard(user: UserDto) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "User Icon",
+                tint = MaterialTheme.colorScheme.primary
+            )
+            user.username?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }

@@ -32,8 +32,9 @@ class FriendRepository @Inject constructor(
 
 
 
-    public fun getFriendSuggestions(){
-        TODO("backend does not exist yet")
+    public fun getFriendSuggestions(query : String): ApiResult<FriendListResponse?> {
+        val response = friendApi.searchNewFriend(query = query).execute()
+        return ApiResult.mapFromResponse(response)
     }
 
     public fun getIncomingFriendRequest(){

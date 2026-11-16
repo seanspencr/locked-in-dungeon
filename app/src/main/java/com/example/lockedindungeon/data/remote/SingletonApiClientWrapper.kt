@@ -1,5 +1,6 @@
 package com.example.lockedindungeon.data.remote
 
+import android.util.Log
 import com.example.lockedindungeon.BuildConfig
 import com.example.lockedindungeon.api.AuthControllerApi
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
@@ -23,9 +24,15 @@ import javax.inject.Singleton
 
 //Ini yang jalan sebelum request dikirim
 class AuthRequestInterceptor() : Interceptor{
+    private val TAG : String = "AuthInterceptor"
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
         val token = IdentityManager.accessToken
+
+        token?.let {
+            Log.d(TAG, "Acces token : $token")
+        }
 
         val requestBuilder = original.newBuilder()
         if (!token.isNullOrEmpty()) {
@@ -43,6 +50,8 @@ class AuthResponseInterceptor(
     val authApi : AuthControllerApi
 ) : Authenticator {
 
+    private val TAG : String = "AuthInterceptor"
+
     override fun authenticate(route: Route?, response: Response): Request? {
         // Step 1: Avoid infinite loops if the refresh request itself returns 401
         if (response.request.url.encodedPath.contains("/auth/refresh")) {
@@ -52,6 +61,10 @@ class AuthResponseInterceptor(
         // Step 2: Ensure we don't retry continuously if token was already updated
         val currentToken = IdentityManager.accessToken
         val requestToken = response.request.header("Authorization")?.removePrefix("Bearer ")
+
+        currentToken?.let {
+            Log.d(TAG, "Acces token : $currentToken")
+        }
 
         if (!currentToken.isNullOrEmpty() && currentToken != requestToken) {
             // Retry original request with the already-refreshed token
