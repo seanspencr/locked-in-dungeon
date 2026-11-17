@@ -48,6 +48,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.lockedindungeon.LockedInDungeon.Companion.TAG
+import com.example.lockedindungeon.components.AppTopBar
 import com.example.lockedindungeon.components.NavigationParent
 import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
@@ -114,6 +115,12 @@ class MainActivity: ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        AppTopBar(
+                            title = "Locked In Dungeon",
+                            onNotificationsClick = { onNotificationsClicked() }
+                        )
+                    },
                     bottomBar = {
                         ParentNavigationBar(navController)
                     }
@@ -136,6 +143,14 @@ class MainActivity: ComponentActivity() {
     override fun onPause() {
         super.onPause()
         nfcWrapper.disable()
+    }
+
+    /**
+     * Placeholder for the notifications entry point in the app bar. First iteration only proves the
+     * wiring, the inbox screen itself comes later (navigate to a NotificationScreenRoute from here).
+     */
+    private fun onNotificationsClicked() {
+        Log.d(tag, "notification icon clicked, notifications screen is not implemented yet")
     }
 
     override fun onNewIntent(intent: Intent) {

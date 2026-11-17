@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -23,6 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -69,6 +72,20 @@ fun SettingsScreen(
                 onEditSaved = { viewmodel.saveDisableAttemptWord(it) }
             )
 
+            SettingToggleCard(
+                name = "Show stats",
+                icon = Icons.Default.BarChart,
+                checked = state.appSettings.showStats,
+                onCheckedChange = { viewmodel.saveShowStats(it) }
+            )
+
+            SettingToggleCard(
+                name = "Show block list",
+                icon = Icons.Default.List,
+                checked = state.appSettings.showBlockList,
+                onCheckedChange = { viewmodel.saveShowBlockList(it) }
+            )
+
             Button(
                 onClick = {
                     writeTagViewModel.reset()
@@ -80,9 +97,6 @@ fun SettingsScreen(
             ) {
                 Text("Reset / Register new card")
             }
-
-
-
 
             Button(
                 onClick = {
@@ -168,6 +182,48 @@ fun EditStringSettingDialog(initialValue: String, name: String, onDismiss: () ->
                 }
             }
         }
+    }
+}
+
+@Composable
+fun SettingToggleCard(
+    name: String,
+    icon: ImageVector,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp))
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                icon,
+                contentDescription = name
+            )
+            Text(
+                text = name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
     }
 }
 

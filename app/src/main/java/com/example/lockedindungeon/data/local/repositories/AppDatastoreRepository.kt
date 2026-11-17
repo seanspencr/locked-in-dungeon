@@ -25,7 +25,11 @@ private val Context.dataStore by preferencesDataStore(name = "app_settings")
 
 
 @Serializable
-data class AppSettings(val disableAttemptWord : String = "failure")
+data class AppSettings(
+    val disableAttemptWord : String = "failure",
+    val showStats : Boolean = true,
+    val showBlockList : Boolean = true
+)
 class AppDatastoreRepository @Inject constructor(
     @ApplicationContext val appContext : Context
 ) {
