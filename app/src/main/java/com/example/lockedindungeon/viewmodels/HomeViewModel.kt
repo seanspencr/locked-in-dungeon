@@ -4,13 +4,19 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
+import com.example.lockedindungeon.data.model.ApiResult
+import com.example.lockedindungeon.data.remote.AuthRepository
+import com.example.lockedindungeon.dto.LoginResponse
+import com.example.lockedindungeon.dto.MeResponse
 import com.example.lockedindungeon.utils.hash
 import com.example.lockedindungeon.utils.parseNdefIntent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.collections.component2
 
 data class HomeState (
     public val message : String = "Test Home State",
@@ -25,7 +31,8 @@ data class HomeState (
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val stateRepository: AppDatastoreRepository
+    private val stateRepository: AppDatastoreRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _state: MutableStateFlow<HomeState> = MutableStateFlow(HomeState())
@@ -49,6 +56,8 @@ class HomeViewModel @Inject constructor(
                 )
             }
         }
+
+        hydrateUser()
     }
 
     /**
@@ -90,4 +99,22 @@ class HomeViewModel @Inject constructor(
         )
     }
 
+
+    public fun hydrateUser(){
+        viewModelScope.launch(Dispatchers.IO) {
+            val userInfo = authRepository.tryGetUserInfo();
+            when(userInfo) {
+                is ApiResult.Error -> setMessage("Failed to fetch user info")
+                is ApiResult.Success<MeResponse> -> {
+                    setMessage("Hello ${userInfo.component2().username}")
+                }
+            }
+        }
+    }
+
+    public fun setMessage(message : String) {
+        _state.value = _state.value.copy(
+            message = message
+        )
+    }
 }

@@ -91,6 +91,7 @@ class AuthRepository @Inject constructor(
             )
         }
 
+
     suspend fun signup(username : String, password : String) : ApiResult<SignupResponse> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -135,33 +136,6 @@ class AuthRepository @Inject constructor(
                 }
             )
         }
-
-    suspend fun refreshToken() : ApiResult<LoginResponse> =
-        withContext(Dispatchers.IO){
-            val token = datastore.refreshToken.last()
-            if(token.isNullOrEmpty()) ApiResult.Error("No refresh token")
-
-            runCatching {
-                authApi.refresh(RefreshRequest(token)).execute()
-            }.fold(
-                onSuccess = { res ->
-                    val body = res.body()
-                    if(body != null && res.isSuccessful){
-                        ApiResult.Success(res.code(), body)
-                    }else if(res.code() == 401){
-                        ApiResult.Error("Refresh token invalid")
-                    }else{
-                        ApiResult.Error("Refresh Token Error")
-                    }
-                },
-                onFailure = {
-                    ApiResult.Error("Refresh Token Error (cant reach server)")
-                }
-            )
-        }
-
-
-
 
     suspend fun saveRefreshToken(refreshToken: String?){
         this.datastore.setRefreshToken(refreshToken)

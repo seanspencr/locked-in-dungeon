@@ -88,7 +88,11 @@ class AppDatastoreRepository @Inject constructor(
     }
 
     suspend fun setRefreshToken(token: String?){
-        appContext.dataStore.edit { it -> it[REFRESH_TOKEN_KEY] = token!! }
+        // token!! would throw whenever the server answers without a refresh token
+        appContext.dataStore.edit { prefs ->
+            if (token.isNullOrEmpty()) prefs.remove(REFRESH_TOKEN_KEY)
+            else prefs[REFRESH_TOKEN_KEY] = token
+        }
     }
 
     val refreshToken : Flow<String?> = appContext.dataStore.data.map {
