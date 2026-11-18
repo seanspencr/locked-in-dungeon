@@ -17,12 +17,25 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.example.lockedindungeon.R
 import com.example.lockedindungeon.activities.MainActivity
+import com.example.lockedindungeon.data.local.entities.Notification as NotificationEntity
+import com.example.lockedindungeon.data.local.entities.NotificationType
+import com.example.lockedindungeon.data.local.repositories.NotificationLocalRepository
 import com.example.lockedindungeon.utils.AppNotificationChannels
 import com.example.lockedindungeon.workers.MyWorker
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
+
+    @Inject lateinit var notificationRepository : NotificationLocalRepository
+
     private val handler = Handler(Looper.getMainLooper())
 
 
@@ -68,10 +81,57 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
             it.body?.let { body -> sendNotification(body) }
         }
 
+        persistNotification(remoteMessage)
+
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
     }
     // [END receive_message]
+
+    /**
+     * Stores every incoming message in Room, so the notification screen can list it even after the
+     * system notification was swiped away.
+     *
+     * Runs with runBlocking on purpose: FCM stops the service right after onMessageReceived returns,
+     * a fire-and-forget coroutine could be cancelled before the row hits the database.
+     */
+    private fun persistNotification(remoteMessage : RemoteMessage) {
+
+
+//        format notif di backend :
+
+        val data = remoteMessage.data
+        val title = remoteMessage.notification?.title ?: data["title"]
+        val body = remoteMessage.notification?.body ?: data["body"]
+
+        if (title.isNullOrBlank() && body.isNullOrBlank() && data.isEmpty()) {
+            Log.d(TAG, "empty message, nothing to store")
+            return
+        }
+
+        Log.d(TAG, "Notification data : ${remoteMessage.data.toString()}")
+
+        val entity = NotificationEntity(
+            id = 0,
+            type = parseNotificationType(data["type"]),
+            title = title.orEmpty(),
+            body = body.orEmpty(),
+            isRead = false,
+            timestamp = System.currentTimeMillis(),
+            payloadJson = runCatching { Json.encodeToString(data) }.getOrNull()
+        )
+
+        runBlocking(Dispatchers.IO) {
+            runCatching { notificationRepository.save(entity) }
+                .onSuccess { id -> Log.d(TAG, "notification stored with id $id") }
+                .onFailure { error -> Log.e(TAG, "failed to store notification", error) }
+        }
+    }
+
+    /** The backend sends `type` as a string ("FOLLOW", "BRAG"), unknown values fall back to BRAG. */
+    private fun parseNotificationType(raw : String?) : NotificationType =
+        NotificationType.entries.firstOrNull { it.name.equals(raw, ignoreCase = true) }
+            ?: NotificationType.BRAG
 
     private fun isLongRunningJob() = true
 

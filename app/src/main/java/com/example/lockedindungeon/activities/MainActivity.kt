@@ -146,11 +146,13 @@ class MainActivity: ComponentActivity() {
     }
 
     /**
-     * Placeholder for the notifications entry point in the app bar. First iteration only proves the
-     * wiring, the inbox screen itself comes later (navigate to a NotificationScreenRoute from here).
+     * Notification entry point of the app bar. The screen itself lives in the nav host, the icon is
+     * above it because every destination shares the app bar.
      */
     private fun onNotificationsClicked() {
-        Log.d(tag, "notification icon clicked, notifications screen is not implemented yet")
+        navController.navigate(NavigationRoute.NotificationScreenRoute) {
+            launchSingleTop = true
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

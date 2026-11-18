@@ -27,6 +27,7 @@ import androidx.navigation.toRoute
 import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.screens.BlockingConfigurationScreen
 import com.example.lockedindungeon.screens.LoginScreen
+import com.example.lockedindungeon.screens.NotificationScreen
 import com.example.lockedindungeon.screens.SettingsScreen
 import com.example.lockedindungeon.screens.SignupScreen
 import com.example.lockedindungeon.screens.UsageScreen
@@ -140,6 +141,12 @@ fun NavigationParent(
             )
         }
 
+        composable<NavigationRoute.NotificationScreenRoute> {
+            NotificationScreen(
+                onNavigateBack = { controller.navigateUp() }
+            )
+        }
+
     }
 }
 
@@ -183,6 +190,8 @@ sealed interface NavigationRoute {
     object LoginRoute : NavigationRoute
     @Serializable
     object HomeScreenRoute : NavigationRoute
+    @Serializable
+    object NotificationScreenRoute : NavigationRoute
     @Serializable
     object FriendScreenRoute : NavigationRoute
     @Serializable
