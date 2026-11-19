@@ -2,13 +2,10 @@ package com.example.lockedindungeon.services
 
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
-import android.os.Build
 import android.os.Handler
-import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
@@ -27,7 +24,6 @@ import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
@@ -261,7 +257,7 @@ class FirebaseMessagingServiceImpl : FirebaseMessagingService() {
         )
 
         // channel is registered once in LockedInDungeon.onCreate, so only its id is needed here
-        val channelId = AppNotificationChannels.friendPokesId(this)
+        val channelId = AppNotificationChannels.friendNotificationId(this)
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)

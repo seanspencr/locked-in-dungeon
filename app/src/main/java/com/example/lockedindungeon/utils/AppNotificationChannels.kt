@@ -15,37 +15,49 @@ import com.example.lockedindungeon.R
  */
 object AppNotificationChannels {
 
-    const val FRIEND_POKES_NAME = "Friend pokes"
-
-    const val SNOOZE_ID = "snooze_notif_channel_v2"
+//    notif name ini buat kata2 yg muncul di settings user, ketika app > permission : nnti kelisting notif name ini, daftarin sekali aja wktu create notification channel
+    const val FRIEND_NOTIFICATION_NAME = "Friend"
+    const val BLOCKING_NOTIFICATION_NAME = "AppBlocker Status"
     const val SNOOZE_NAME = "Snooze Notification"
 
-    /** Notification id used for the "blocking is back on" notification. */
+//  channelId (INT)  ini buat ketika .notify() dia masuk kemana (misal intnya sama berarti ke overwrite contentnya tiap dinotify)
     const val SNOOZE_NOTIFICATION_ID = 0
-    const val FRIEND_POKES_NAME_ID = 1
+    const val FRIEND_NOTIFICATION_ID = 1
+    const val BLOCKING_NOTIFICATION_ID = 2
 
-    /**
-     * Read from `default_notification_channel_id`, so the id used in code can never drift away from
-     * the `com.google.firebase.messaging.default_notification_channel_id` manifest meta-data that
-     * FCM reads for notifications it displays itself.
-     */
-    fun friendPokesId(context: Context) : String =
+
+//    notif id (String) ini gunanya buat identifier secara system utk notif channelnya, nanti ketika NotificationCompat.Builder(..., channelId) <- karena si channelId ini juga mapped ke string yang muncul di settings user
+    fun friendNotificationId(context: Context) : String =
         context.getString(R.string.default_notification_channel_id)
 
+    fun blockingNotificationId(context : Context) : String{
+        return context.getString(R.string.blocking_notification_channel_id)
+    }
+
+    fun snoozeNotificationId(context: Context) : String {
+        return context.getString(R.string.snooze_notification_channel_id)
+    }
     fun createAll(context: Context) {
         val notificationManager = context.getSystemService<NotificationManager>() ?: return
 
         notificationManager.createNotificationChannels(
             listOf(
                 NotificationChannel(
-                    friendPokesId(context),
-                    FRIEND_POKES_NAME,
-                    NotificationManager.IMPORTANCE_HIGH
+                    friendNotificationId(context),
+                    FRIEND_NOTIFICATION_NAME,
+                    NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
                     description = "Nudges from friends while your block is running"
                 },
                 NotificationChannel(
-                    SNOOZE_ID,
+                    blockingNotificationId(context),
+                    BLOCKING_NOTIFICATION_NAME,
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Tell you whether the blocking is running or interrupted"
+                },
+                NotificationChannel(
+                    snoozeNotificationId(context),
                     SNOOZE_NAME,
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {

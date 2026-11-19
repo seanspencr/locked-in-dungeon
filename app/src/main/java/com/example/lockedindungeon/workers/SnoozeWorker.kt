@@ -41,7 +41,7 @@ class SnoozeWorker @AssistedInject constructor(
 
     private fun buildNotif() : Notification {
         // the channel is registered once in LockedInDungeon.onCreate, not here
-        return NotificationCompat.Builder(context, AppNotificationChannels.SNOOZE_ID).apply {
+        return NotificationCompat.Builder(context, AppNotificationChannels.snoozeNotificationId(applicationContext)).apply {
             setSmallIcon(R.drawable.ic_launcher_foreground)
             setContentTitle("Reactivating Blocking")
             setContentText("Snooze duration ran out, reactivating blocking")
