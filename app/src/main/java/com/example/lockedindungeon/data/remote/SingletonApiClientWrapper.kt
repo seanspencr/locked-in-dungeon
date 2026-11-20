@@ -95,6 +95,7 @@ class AuthResponseInterceptor(
                 is ApiResult.Success<LoginResponse> -> {
                     Log.d(TAG, "refresh ok, retrying the failed call with ${maskToken(tokenResponse.data.accessToken)}")
                     IdentityManager.accessToken = tokenResponse.data.accessToken
+                    // saving the refresh token also refreshes IdentityManager.isLoggedIn
                     saveRefreshToken(tokenResponse.data.refreshToken)
 
                     response.request.newBuilder().header("Authorization", "Bearer ${tokenResponse.data.accessToken}").build()
@@ -111,6 +112,8 @@ class AuthResponseInterceptor(
                 Log.d(TAG, "stored refresh token: ${maskToken(token)}")
                 if(token.isNullOrEmpty()) {
                     Log.w(TAG, "no refresh token stored, cannot refresh")
+                    // no refresh token means there is no session left, whatever the access token says
+                    IdentityManager.isLoggedIn.value = false
                     return@runBlocking ApiResult.Error("No refresh token")
                 }
 
@@ -124,6 +127,10 @@ class AuthResponseInterceptor(
                         if(body != null && res.isSuccessful){
                             ApiResult.Success(res.code(), body)
                         }else if(res.code() == 401){
+                            // refresh token rejected: the session is over, clear both sides
+                            Log.w(TAG, "refresh token rejected, clearing the session")
+                            IdentityManager.accessToken = null
+                            saveRefreshToken(null)
                             ApiResult.Error("Refresh token invalid")
                         }else{
                             ApiResult.Error("Refresh Token Error")
@@ -143,6 +150,7 @@ class AuthResponseInterceptor(
             runBlocking {
                 datastore.setRefreshToken(refreshToken)
             }
+            syncLoginState(datastore)
         }
     }
 }
@@ -156,6 +164,32 @@ val logging = HttpLoggingInterceptor().apply {
 /** Enough of a token to tell two of them apart, not enough to be a leaked credential in logcat. */
 private fun maskToken(token : String?) : String =
     if (token.isNullOrEmpty()) "none" else "${token.take(8)}...${token.takeLast(4)} (len ${token.length})"
+
+private const val AUTH_TAG = "AuthState"
+
+/**
+ * Keeps [IdentityManager.isLoggedIn] in sync with the two tokens the session actually needs.
+ *
+ * Logged in only when there is an access token in memory *and* a refresh token on disk: with just
+ * one of them the next call cannot be authenticated or renewed. Reads the store directly because
+ * the refresh token is persisted, while the access token lives only in [IdentityManager].
+ */
+public fun syncLoginState(datastore : AppDatastoreRepository) {
+    val accessToken = IdentityManager.accessToken
+    val refreshToken = runBlocking { datastore.refreshToken.first() }
+
+    val hasAccessToken = !accessToken.isNullOrEmpty()
+    val hasRefreshToken = !refreshToken.isNullOrEmpty()
+    val loggedIn = hasAccessToken && hasRefreshToken
+
+    if (IdentityManager.isLoggedIn.value != loggedIn) {
+        Log.d(
+            AUTH_TAG,
+            "isLoggedIn -> $loggedIn (access=${maskToken(accessToken)}, refresh=${maskToken(refreshToken)})"
+        )
+        IdentityManager.isLoggedIn.value = loggedIn
+    }
+}
 
 
 @Singleton

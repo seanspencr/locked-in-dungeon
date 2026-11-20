@@ -133,6 +133,8 @@ class AuthRepository @Inject constructor(
 
     suspend fun saveRefreshToken(refreshToken: String?){
         this.datastore.setRefreshToken(refreshToken)
+        // login writes the access token first, so both are present here on a successful login
+        syncLoginState(datastore)
     }
 
 }
