@@ -137,4 +137,11 @@ class AuthRepository @Inject constructor(
         syncLoginState(datastore)
     }
 
+    /** Drops both tokens, which is what flips IdentityManager.isLoggedIn back to false. */
+    suspend fun signOut(){
+        IdentityManager.accessToken = null
+        IdentityManager.username = null
+        saveRefreshToken(null)
+    }
+
 }

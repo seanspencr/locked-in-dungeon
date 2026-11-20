@@ -45,16 +45,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.lockedindungeon.components.TitleBar
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
+import com.example.lockedindungeon.utils.auth.IdentityManager
 import com.example.lockedindungeon.viewmodels.SettingsViewmodel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
 
 @Composable
 fun SettingsScreen(
     viewmodel: SettingsViewmodel = viewModel(),
-    writeTagViewModel: WriteTagViewModel = viewModel()
+    writeTagViewModel: WriteTagViewModel = viewModel(),
+    onNavigateToLogin: () -> Unit = {}
 ) {
 
     val state by viewmodel.state.collectAsStateWithLifecycle()
+    val isLoggedIn by IdentityManager.isLoggedIn.collectAsStateWithLifecycle()
     var isWriteTagDialogOpen by rememberSaveable { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
@@ -100,6 +103,7 @@ fun SettingsScreen(
 
             Button(
                 onClick = {
+                    if (isLoggedIn) viewmodel.signOut() else onNavigateToLogin()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,7 +111,7 @@ fun SettingsScreen(
                 ,
 
             ) {
-                Text("Sign in")
+                Text(if (isLoggedIn) "Sign out" else "Sign in")
             }
         }
 

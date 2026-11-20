@@ -55,6 +55,7 @@ fun HomeScreen(
         }
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val isLoggedIn by IdentityManager.isLoggedIn.collectAsStateWithLifecycle()
     var isWriteTagDialogOpen by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(isAnimationLoaded) {
         if (isAnimationLoaded) {
@@ -119,8 +120,10 @@ fun HomeScreen(
             Text(text = "Reset / Register new card")
         }
 
-        TextButton(onClick = onNavigateToLogin) {
-            Text(text = "Sign in")
+        if (!isLoggedIn) {
+            TextButton(onClick = onNavigateToLogin) {
+                Text(text = "Sign in")
+            }
         }
 
         if(state.isNfcDialogOpen){

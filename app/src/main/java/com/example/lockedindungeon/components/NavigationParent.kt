@@ -20,6 +20,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -39,6 +41,7 @@ import com.example.lockedindungeon.viewmodels.SettingsViewmodel
 import com.example.lockedindungeon.viewmodels.SignupViewmodel
 import com.example.lockedindungeon.viewmodels.UsageViewModel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
+import com.example.lockedindungeon.utils.auth.IdentityManager
 import kotlinx.serialization.Serializable
 
 import com.example.lockedindungeon.screens.FriendScreen
@@ -110,7 +113,10 @@ fun NavigationParent(
             backstackEntry ->
                 SettingsScreen(
                     viewmodel = settingsViewmodel,
-                    writeTagViewModel = writeTagViewModel
+                    writeTagViewModel = writeTagViewModel,
+                    onNavigateToLogin = {
+                        controller.navigate(NavigationRoute.LoginRoute) { launchSingleTop = true }
+                    }
                 )
         }
 
@@ -157,8 +163,26 @@ fun ParentNavigationBar(controller : NavHostController, modifier: Modifier = Mod
     val navBackStackEntry by controller.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    val isLoggedIn by IdentityManager.isLoggedIn.collectAsStateWithLifecycle()
+
+    // everything except friends works offline, but friends needs a session
+    val visibleRoutes = NavigationBarRouteObject.entries.filter { routeObject ->
+        isLoggedIn || routeObject.route != NavigationRoute.FriendScreenRoute
+    }
+
+    // logged out while standing on a tab that just disappeared: send the user home
+    LaunchedEffect(isLoggedIn) {
+        val onFriendScreen = currentDestination?.hasRoute(NavigationRoute.FriendScreenRoute::class) == true
+        if (!isLoggedIn && onFriendScreen) {
+            controller.navigate(NavigationRoute.HomeScreenRoute) {
+                popUpTo(NavigationRoute.HomeScreenRoute) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavigationBar(windowInsets = NavigationBarDefaults.windowInsets) {
-        NavigationBarRouteObject.entries.forEach {
+        visibleRoutes.forEach {
             NavigationBarItem(
                 selected = currentDestination?.hasRoute(it.route::class) ?: true,
                 icon = { Icon(it.icon, it.description) },

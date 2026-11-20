@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.data.local.repositories.AppSettings
 import com.example.lockedindungeon.data.model.ApiResult
+import com.example.lockedindungeon.data.remote.AuthRepository
 import com.example.lockedindungeon.data.remote.UserRepository
 import com.example.lockedindungeon.dto.ModifySettingsRequest
 import com.example.lockedindungeon.dto.UserSettings
@@ -23,7 +24,8 @@ data class SettingsScreenState(
 @HiltViewModel
 class SettingsViewmodel @Inject constructor(
     private val dataStoreRepository : AppDatastoreRepository,
-    private val userRepository : UserRepository
+    private val userRepository : UserRepository,
+    private val authRepository : AuthRepository
 ) : ViewModel() {
 
     companion object {
@@ -54,6 +56,13 @@ class SettingsViewmodel @Inject constructor(
     fun saveShowBlockList(newVal : Boolean) {
         applyLocal { it.copy(showBlockList = newVal) }
         pushToRemote()
+    }
+
+    /** Clears the session, which also hides the friend tab and the sign in entry points. */
+    fun signOut() {
+        viewModelScope.launch(Dispatchers.IO) {
+            authRepository.signOut()
+        }
     }
 
     /** Local DataStore is the source of truth for the UI, the remote call happens after it. */
