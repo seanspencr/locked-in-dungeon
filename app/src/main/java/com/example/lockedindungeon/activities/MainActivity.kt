@@ -51,6 +51,7 @@ import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.common.NfcWrapper
+import com.example.lockedindungeon.services.ForegroundPackageDetectionService
 import com.example.lockedindungeon.services.ScreenDetectionAccesibilityService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
@@ -123,11 +124,12 @@ class MainActivity: ComponentActivity() {
         }
     }
 
-
-
     override fun onResume() {
         super.onResume()
         nfcWrapper.enable()
+        if (hasUsageStatsPermission() && !ForegroundPackageDetectionService.isRunning.value) {
+            startForegroundService(Intent(applicationContext, ForegroundPackageDetectionService::class.java))
+        }
     }
 
     override fun onPause() {
@@ -173,9 +175,6 @@ class MainActivity: ComponentActivity() {
 //            request = request
 //        )
 //    }
-
-
-
 
     fun isAccessibilityEnabled() : Boolean {
         val serviceName = packageName + "/" + ScreenDetectionAccesibilityService::class.java.canonicalName
@@ -232,6 +231,8 @@ class MainActivity: ComponentActivity() {
             startActivity(intent)
         }
     }
+
+
 
 
     fun deployAssetToInternalStorage(context: Context, assetFileName: String) {

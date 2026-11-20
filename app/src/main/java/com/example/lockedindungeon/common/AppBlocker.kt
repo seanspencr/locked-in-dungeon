@@ -164,4 +164,10 @@ class AppBlocker @Inject constructor(
         }
         appContext.startActivity(intent)
     }
+
+    fun onPackagesOpened(packages : List<String>) {
+        for (name in packages){
+            this.onPackageOpened(name)
+        }
+    }
 }

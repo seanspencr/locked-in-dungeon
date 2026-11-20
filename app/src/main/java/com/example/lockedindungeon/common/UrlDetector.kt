@@ -5,6 +5,9 @@ import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
 import com.example.lockedindungeon.services.ScreenDetectionAccesibilityService.Companion.tag
 import com.example.lockedindungeon.utils.blocking.parseDomainFromUrl
+import dagger.Component
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
 enum class BrowserName(val packageName: String){
@@ -39,7 +42,7 @@ enum class BrowserName(val packageName: String){
     }
 }
 
-class UrlDetector {
+class UrlDetector @Inject constructor() {
 
     fun getUrl(node : AccessibilityNodeInfo, packageName: String) : String{
 

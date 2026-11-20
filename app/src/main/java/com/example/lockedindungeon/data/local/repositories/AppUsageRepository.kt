@@ -1,5 +1,6 @@
 package com.example.lockedindungeon.data.local.repositories
 
+import android.app.usage.UsageEvents
 import android.app.usage.UsageEventsQuery
 import android.app.usage.UsageStatsManager
 import android.content.Context
@@ -35,17 +36,16 @@ class AppUsageRepository @Inject constructor(
     }
 
 //    return package name yang sedang di foreground or null
-    public fun queryWindowEvent(beginTimeMillis : Long, endTimeMillis : Long) : String? {
+    public fun queryWindowEvent(beginTimeMillis : Long, endTimeMillis : Long) : UsageEvents? {
         val query = UsageEventsQuery.Builder(beginTimeMillis, endTimeMillis).apply {
-            setEventTypes()
-            setPackageNames()
+            setEventTypes(
+                UsageEvents.Event.ACTIVITY_RESUMED,
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED,
+            )
         }.build()
-        val events = usageStatsManager.queryEvents(query)
-        Log.d(TAG, events.toString())
+        return usageStatsManager.queryEvents(query)
 
-
-//    TODO() : return bneran
-        return null
     }
 
 
