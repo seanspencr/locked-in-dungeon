@@ -1,7 +1,9 @@
 package com.example.lockedindungeon.data.local.repositories
 
+import android.app.usage.UsageEventsQuery
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.util.Log
 import com.example.lockedindungeon.data.model.PackageInformationDto
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Calendar
@@ -14,9 +16,17 @@ data class UsageStatsMinute(
 
 class AppUsageRepository @Inject constructor(
     private val appListRepository: AppListRepository,
+    private val appBlockingRepository: AppBlockingRepository,
     @ApplicationContext private val appContext : Context
 ) {
 
+
+
+    private lateinit var usageStatsManager: UsageStatsManager
+    private val TAG = "AppUsageRepository"
+    init {
+        usageStatsManager = this.appContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+    }
 
     public fun getUsageDurationMinutes(packageName : String) : Int{
         val stats = getUsageStats()
@@ -24,9 +34,23 @@ class AppUsageRepository @Inject constructor(
         return stats?.first { it.packageInfo.packageName == packageName }?.usageMinute ?: 0
     }
 
+//    return package name yang sedang di foreground or null
+    public fun queryWindowEvent(beginTimeMillis : Long, endTimeMillis : Long) : String? {
+        val query = UsageEventsQuery.Builder(beginTimeMillis, endTimeMillis).apply {
+            setEventTypes()
+            setPackageNames()
+        }.build()
+        val events = usageStatsManager.queryEvents(query)
+        Log.d(TAG, events.toString())
+
+
+//    TODO() : return bneran
+        return null
+    }
+
+
     public fun getUsageStats(): List<UsageStatsMinute>? {
-        val usageStatsManager =
-            this.appContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+
 
         val startTimeMillis = Calendar.getInstance().apply {
             timeInMillis = System.currentTimeMillis()

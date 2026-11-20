@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -43,7 +42,7 @@ class PackageListViewModel @Inject  constructor(
 
     private fun loadAppsAndBlockingData(){
         val allApps : StateFlow<List<PackageInformationDto>> = appListRepository.appList
-        val blockingDetails :  Flow<List<AppBlockingDetail>?> = repository.selectBlockingDetails() ?: flowOf(null)
+        val blockingDetails : Flow<List<AppBlockingDetail>> = repository.blockingDetails
 
         viewModelScope.launch {
             allApps.combine(
@@ -56,12 +55,12 @@ class PackageListViewModel @Inject  constructor(
                 val details = combined.second
 
 
-                val urls = details?.filter { it.targetType == TargetType.URL }?.map {
+                val urls = details.filter { it.targetType == TargetType.URL }.map {
                     PackageInformationDto(it.packageNameOrUrl, it.displayName, true)
-                } ?: listOf()
+                }
 
 //                mark apps yang ada kedaftar di repo sebagai blocked
-                details?.forEach { detail ->
+                details.forEach { detail ->
                     apps.find { app ->
                         app.packageName == detail.packageNameOrUrl
                     }?.isBlocked = true

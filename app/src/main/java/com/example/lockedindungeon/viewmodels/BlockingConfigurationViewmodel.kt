@@ -42,7 +42,7 @@ class BlockingConfigurationViewmodel @Inject constructor(
 
     fun setApp(packageName: String, targetType: TargetType) {
         viewModelScope.launch(Dispatchers.IO) {
-            val existing : AppBlockingDetail? = repository.findBlockingDetail(packageName)?.firstOrNull()
+            val existing : AppBlockingDetail? = repository.findBlockingDetail(packageName).firstOrNull()
             if(existing != null){
                 _state.value = _state.value.copy(
                     packageName = packageName,

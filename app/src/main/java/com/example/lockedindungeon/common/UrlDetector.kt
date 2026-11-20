@@ -3,7 +3,7 @@ package com.example.lockedindungeon.common
 import android.os.Bundle
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
-import com.example.lockedindungeon.services.AppBlockService.Companion.tag
+import com.example.lockedindungeon.services.ScreenDetectionAccesibilityService.Companion.tag
 import com.example.lockedindungeon.utils.blocking.parseDomainFromUrl
 
 

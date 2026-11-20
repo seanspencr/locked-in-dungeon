@@ -51,7 +51,7 @@ import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.common.NfcWrapper
-import com.example.lockedindungeon.services.AppBlockService
+import com.example.lockedindungeon.services.ScreenDetectionAccesibilityService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
 import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
@@ -178,7 +178,7 @@ class MainActivity: ComponentActivity() {
 
 
     fun isAccessibilityEnabled() : Boolean {
-        val serviceName = packageName + "/" + AppBlockService::class.java.canonicalName
+        val serviceName = packageName + "/" + ScreenDetectionAccesibilityService::class.java.canonicalName
         val accessibilityEnabled = try {
             Settings.Secure.getInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
         } catch (e: Settings.SettingNotFoundException) {

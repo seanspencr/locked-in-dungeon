@@ -12,7 +12,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,7 +34,7 @@ class BlockingListViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             appListRepository.appList.combine(
-                blockingListRepository.selectBlockingDetails() ?: flowOf(null),
+                blockingListRepository.blockingDetails,
                 transform = {
                     appList, blockingList -> Pair(appList, blockingList)
                 }
@@ -46,7 +45,7 @@ class BlockingListViewModel @Inject constructor(
                 val blockingList = combined.second
 
                 _state.value = _state.value.copy(
-                    blockingList = blockingList ?: listOf(),
+                    blockingList = blockingList,
                     appList = appList
                 )
             }

@@ -7,17 +7,21 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
 
 
@@ -30,41 +34,64 @@ data class AppSettings(
     val showStats : Boolean = true,
     val showBlockList : Boolean = true
 )
+
+@Singleton
 class AppDatastoreRepository @Inject constructor(
-    @ApplicationContext val appContext : Context
+    @ApplicationContext val appContext : Context,
+    private val applicationScope : CoroutineScope
 ) {
 
     companion object {
         const val tag = "AppStateRepository"
     }
-    val ticker = flow {
-        while (true){
+
+    /** Emits every 5 minutes, only used to re-evaluate the day based values. */
+    private val ticker = flow {
+        while (true) {
             emit(Unit)
             delay(5.minutes)
         }
     }
+
     private val IS_ACTIVE_KEY = booleanPreferencesKey("is_active")
     private val START_TIME_KEY = longPreferencesKey("start_time")
     private val APP_SETTINGS_KEY = stringPreferencesKey("app_settings")
     private val REFRESH_TOKEN_KEY = stringPreferencesKey("refreshToken")
 
-    val isActive: Flow<Boolean> = appContext.dataStore.data
+    // All of these are Eagerly on the application scope, not WhileSubscribed: workers, the OkHttp
+    // Authenticator and services read .value / .first() outside of a UI subscriber, and a lazy
+    // StateFlow would hand them the initial value instead of what is actually stored.
+    val isActive : StateFlow<Boolean> = appContext.dataStore.data
         .map { prefs -> prefs[IS_ACTIVE_KEY] ?: false }
+        .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = false)
 
-    val startTime: Flow<LocalDateTime?> = appContext.dataStore.data
+    val startTime : StateFlow<LocalDateTime?> = appContext.dataStore.data
         .map { prefs ->
-            prefs[START_TIME_KEY]?.let {
-                second -> LocalDateTime.ofEpochSecond(second, 0, ZoneOffset.UTC)
+            prefs[START_TIME_KEY]?.let { epochSecond ->
+                LocalDateTime.ofEpochSecond(epochSecond, 0, ZoneOffset.UTC)
             }
         }
+        .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = null)
 
-    val currentDayStreak: Flow<Int> = combine(startTime, ticker) { start, tick  ->
+    val currentDayStreak : StateFlow<Int> = combine(startTime, ticker) { start, _ ->
         if (start == null) {
             0
         } else {
             ChronoUnit.DAYS.between(start, LocalDateTime.now(ZoneOffset.UTC)).toInt()
         }
-    }
+    }.stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = 0)
+
+    val settings : StateFlow<AppSettings> = appContext.dataStore.data
+        .map { prefs ->
+            prefs[APP_SETTINGS_KEY]?.let { encoded ->
+                Json.decodeFromString<AppSettings>(encoded)
+            } ?: AppSettings()
+        }
+        .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = AppSettings())
+
+    val refreshToken : StateFlow<String?> = appContext.dataStore.data
+        .map { prefs -> prefs[REFRESH_TOKEN_KEY] }
+        .stateIn(scope = applicationScope, started = SharingStarted.Eagerly, initialValue = null)
 
     suspend fun setActive(active: Boolean) {
         appContext.dataStore.edit { prefs ->
@@ -82,15 +109,6 @@ class AppDatastoreRepository @Inject constructor(
         appContext.dataStore.edit { prefs -> prefs[APP_SETTINGS_KEY] = Json.encodeToString(settings) }
     }
 
-    val settings : Flow<AppSettings> = appContext.dataStore.data.map { prefs ->
-        val setting = prefs[APP_SETTINGS_KEY]
-        if(setting == null){
-            AppSettings()
-        }else{
-            Json.decodeFromString<AppSettings>(setting)
-        }
-    }
-
     suspend fun setRefreshToken(token: String?){
         // token!! would throw whenever the server answers without a refresh token
         appContext.dataStore.edit { prefs ->
@@ -98,9 +116,4 @@ class AppDatastoreRepository @Inject constructor(
             else prefs[REFRESH_TOKEN_KEY] = token
         }
     }
-
-    val refreshToken : Flow<String?> = appContext.dataStore.data.map {
-        it -> it[REFRESH_TOKEN_KEY]
-    }
-
 }
