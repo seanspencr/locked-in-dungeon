@@ -1,11 +1,13 @@
-package com.example.lockedindungeon.utils
+package com.example.lockedindungeon.utils.blocking
+
+import java.net.URI
 
 fun parseDomainFromUrl(url: String): String {
     return try {
         // Ensure there's a scheme so URI parsing works correctly
         val normalizedUrl = if (!url.contains("://")) "https://$url" else url
 
-        val uri = java.net.URI(normalizedUrl)
+        val uri = URI(normalizedUrl)
         var host = uri.host ?: return ""
 
         // Strip common subdomain prefixes that don't change the "real" domain

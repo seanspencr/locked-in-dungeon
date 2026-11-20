@@ -1,16 +1,11 @@
-package com.example.lockedindungeon.feature
+package com.example.lockedindungeon.common
 
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.IntentFilter
 import android.nfc.NfcAdapter
-import android.nfc.tech.IsoDep
-import android.nfc.tech.MifareClassic
-import android.nfc.tech.MifareUltralight
 import android.nfc.tech.Ndef
-import android.nfc.tech.NdefFormatable
-import android.nfc.tech.NfcA
 import dagger.hilt.android.scopes.ActivityScoped
 import javax.inject.Inject
 

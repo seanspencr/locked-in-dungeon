@@ -1,11 +1,10 @@
-package com.example.lockedindungeon.feature
+package com.example.lockedindungeon.common
 
 import android.os.Bundle
 import android.util.Log
 import android.view.accessibility.AccessibilityNodeInfo
-import com.example.lockedindungeon.data.local.entities.AppBlockingDetail
 import com.example.lockedindungeon.services.AppBlockService.Companion.tag
-import com.example.lockedindungeon.utils.parseDomainFromUrl
+import com.example.lockedindungeon.utils.blocking.parseDomainFromUrl
 
 
 enum class BrowserName(val packageName: String){

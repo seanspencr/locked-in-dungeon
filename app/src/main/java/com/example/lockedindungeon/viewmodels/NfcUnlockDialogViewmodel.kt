@@ -5,14 +5,12 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
-import com.example.lockedindungeon.utils.hash
-import com.example.lockedindungeon.utils.parseNdefIntent
+import com.example.lockedindungeon.utils.nfc.hash
+import com.example.lockedindungeon.utils.nfc.parseNdefIntent
 import com.example.lockedindungeon.workers.SnoozeWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext

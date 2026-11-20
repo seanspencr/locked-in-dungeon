@@ -1,4 +1,4 @@
-package com.example.lockedindungeon.utils
+package com.example.lockedindungeon.utils.auth
 
 object IdentityManager {
     var username : String? = null

@@ -14,8 +14,8 @@ import com.example.lockedindungeon.data.local.entities.TargetType
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.data.local.repositories.AppUsageRepository
 import com.example.lockedindungeon.data.local.repositories.AppBlockingRepository
-import com.example.lockedindungeon.feature.UrlDetector
-import com.example.lockedindungeon.utils.isBrowser
+import com.example.lockedindungeon.common.UrlDetector
+import com.example.lockedindungeon.utils.blocking.isBrowser
 import dagger.hilt.EntryPoints
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope

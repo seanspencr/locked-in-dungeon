@@ -11,7 +11,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.lockedindungeon.R
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
-import com.example.lockedindungeon.utils.AppNotificationChannels
+import com.example.lockedindungeon.utils.notification.AppNotificationChannels
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first

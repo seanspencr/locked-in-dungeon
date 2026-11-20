@@ -1,17 +1,11 @@
 package com.example.lockedindungeon
 
 import android.app.Application
-import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import com.example.lockedindungeon.utils.AppNotificationChannels
-import com.google.firebase.Firebase
-import com.google.firebase.installations.FirebaseInstallations
+import com.example.lockedindungeon.utils.notification.AppNotificationChannels
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.messaging
 import dagger.hilt.android.HiltAndroidApp
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 import javax.inject.Inject
 
 @HiltAndroidApp

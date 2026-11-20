@@ -5,8 +5,8 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.lockedindungeon.utils.hash
-import com.example.lockedindungeon.utils.writeToTag
+import com.example.lockedindungeon.utils.nfc.hash
+import com.example.lockedindungeon.utils.nfc.writeToTag
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

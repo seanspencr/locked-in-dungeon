@@ -42,33 +42,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.getSystemService
-import androidx.datastore.dataStore
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.lockedindungeon.LockedInDungeon.Companion.TAG
 import com.example.lockedindungeon.components.AppTopBar
 import com.example.lockedindungeon.components.NavigationParent
 import com.example.lockedindungeon.components.NavigationRoute
 import com.example.lockedindungeon.components.ParentNavigationBar
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
-import com.example.lockedindungeon.feature.NfcWrapper
+import com.example.lockedindungeon.common.NfcWrapper
 import com.example.lockedindungeon.services.AppBlockService
 import com.example.lockedindungeon.ui.theme.LockedInDungeonTheme
 import com.example.lockedindungeon.viewmodels.HomeViewModel
 import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
 import com.example.lockedindungeon.viewmodels.WriteTagViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.messaging.messaging
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 import javax.inject.Inject
 
 @AndroidEntryPoint

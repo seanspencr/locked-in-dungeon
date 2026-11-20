@@ -6,17 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
 import com.example.lockedindungeon.data.model.ApiResult
 import com.example.lockedindungeon.data.remote.AuthRepository
-import com.example.lockedindungeon.dto.LoginResponse
 import com.example.lockedindungeon.dto.MeResponse
-import com.example.lockedindungeon.utils.hash
-import com.example.lockedindungeon.utils.parseNdefIntent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.component2
 
 data class HomeState (
     public val message : String = "Test Home State",

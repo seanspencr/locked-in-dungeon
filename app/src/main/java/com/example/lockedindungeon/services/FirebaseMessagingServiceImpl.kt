@@ -17,7 +17,7 @@ import com.example.lockedindungeon.activities.MainActivity
 import com.example.lockedindungeon.data.local.entities.Notification as NotificationEntity
 import com.example.lockedindungeon.data.local.entities.NotificationType
 import com.example.lockedindungeon.data.local.repositories.NotificationLocalRepository
-import com.example.lockedindungeon.utils.AppNotificationChannels
+import com.example.lockedindungeon.utils.notification.AppNotificationChannels
 import com.example.lockedindungeon.workers.MyWorker
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage

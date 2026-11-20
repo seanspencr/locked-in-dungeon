@@ -1,4 +1,4 @@
-package com.example.lockedindungeon.utils
+package com.example.lockedindungeon.utils.blocking
 
 fun isBrowser(packageName : String) : Boolean{
     val browserPackageNames = listOf(

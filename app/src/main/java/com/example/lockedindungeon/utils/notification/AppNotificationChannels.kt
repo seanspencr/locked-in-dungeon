@@ -1,4 +1,4 @@
-package com.example.lockedindungeon.utils
+package com.example.lockedindungeon.utils.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

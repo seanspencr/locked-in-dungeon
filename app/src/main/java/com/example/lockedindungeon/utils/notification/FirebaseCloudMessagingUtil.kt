@@ -1,18 +1,10 @@
-package com.example.lockedindungeon.utils
+package com.example.lockedindungeon.utils.notification
 
 import android.os.Build
 import android.util.Log
-import com.example.lockedindungeon.LockedInDungeon.Companion.TAG
-import com.example.lockedindungeon.api.UserControllerApi
-import com.example.lockedindungeon.data.remote.AuthRepository
-import com.example.lockedindungeon.dto.RegisterFirebaseRequest
 import com.google.firebase.Firebase
 import com.google.firebase.installations.FirebaseInstallations
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.messaging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.openapitools.client.infrastructure.ApiClient
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 

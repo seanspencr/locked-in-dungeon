@@ -1,4 +1,4 @@
-package com.example.lockedindungeon.utils
+package com.example.lockedindungeon.utils.nfc
 
 import android.content.Intent
 import android.nfc.NdefMessage

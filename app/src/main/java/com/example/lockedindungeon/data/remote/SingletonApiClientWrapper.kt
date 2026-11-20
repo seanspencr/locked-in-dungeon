@@ -7,7 +7,7 @@ import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepositor
 import com.example.lockedindungeon.data.model.ApiResult
 import com.example.lockedindungeon.dto.LoginResponse
 import com.example.lockedindungeon.dto.RefreshRequest
-import com.example.lockedindungeon.utils.IdentityManager
+import com.example.lockedindungeon.utils.auth.IdentityManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator

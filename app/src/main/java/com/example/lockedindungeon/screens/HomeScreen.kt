@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
  import com.example.lockedindungeon.components.NfcUnlockDialog
 import com.example.lockedindungeon.components.NotificationRequestDialog
 import com.example.lockedindungeon.components.WriteTagPasswordDialog
- import com.example.lockedindungeon.utils.IdentityManager
+ import com.example.lockedindungeon.utils.auth.IdentityManager
  import com.example.lockedindungeon.viewmodels.HomeViewModel
  import com.example.lockedindungeon.viewmodels.NfcUnlockDialogViewmodel
  import com.example.lockedindungeon.viewmodels.WriteTagViewModel

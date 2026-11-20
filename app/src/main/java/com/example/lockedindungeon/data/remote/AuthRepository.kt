@@ -1,7 +1,6 @@
 package com.example.lockedindungeon.data.remote
 
 import android.util.Log
-import com.example.lockedindungeon.BuildConfig
 import com.example.lockedindungeon.api.AuthControllerApi
 import com.example.lockedindungeon.api.UserControllerApi
 import com.example.lockedindungeon.data.local.repositories.AppDatastoreRepository
@@ -9,20 +8,15 @@ import com.example.lockedindungeon.data.model.ApiResult
 import com.example.lockedindungeon.dto.LoginRequest
 import com.example.lockedindungeon.dto.LoginResponse
 import com.example.lockedindungeon.dto.MeResponse
-import com.example.lockedindungeon.dto.RefreshRequest
 import com.example.lockedindungeon.dto.RegisterFirebaseRequest
 import com.example.lockedindungeon.dto.SignupRequest
 import com.example.lockedindungeon.dto.SignupResponse
-import com.example.lockedindungeon.utils.IdentityManager
-import com.example.lockedindungeon.utils.registerFirebaseMessaging
+import com.example.lockedindungeon.utils.auth.IdentityManager
+import com.example.lockedindungeon.utils.notification.registerFirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import okhttp3.Authenticator
-import okhttp3.OkHttpClient
 import org.openapitools.client.infrastructure.ApiClient
 import javax.inject.Inject
 import javax.inject.Singleton
